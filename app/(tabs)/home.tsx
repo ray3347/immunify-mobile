@@ -1,127 +1,280 @@
-import React from 'react';
-import { View, Text, Image, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { useRouter } from 'expo-router'
+import React from "react";
+import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  GestureHandlerRootView,
+  ScrollView,
+} from "react-native-gesture-handler";
+import { useRouter } from "expo-router";
 
+import Divider from "../../components/Divider";
+import BigCard from "../../components/BigCard";
+import Label from "../../components/Label";
+import InfoCard from "../../components/InfoCard";
+import CardNoBorder from "../../components/CardNoBorder";
+import TextButton from "../../components/TextButton";
 const Home = () => {
-  const router = useRouter()
+  const router = useRouter();
 
-  const handleNext = async()=>{
-    router.push('../clinic_detail')
+  const handleNextClinic = () => {
+    router.push("../clinic_detail");
+  };
+
+  const viewAllClinic = () => {
+    router.push("/(tabs)/clinics");
+  };
+
+  const handleNextArticle = () => {
+    router.push("../clinic_detail");
+  };
+
+  const viewArticlePage = () => {
+    router.push("../article_detail");
   }
-
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}>
-        <View style={{ marginVertical: 24, paddingHorizontal: 16 }}>
-          {/* Greeting Section */}
-          <View>
-            <Text style={{ fontWeight: 'normal', fontSize: 12, color: '#6B7280' }}>Hello,</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Text style={{ fontWeight: 'bold', fontSize: 18, color: '#4B5563' }}>Jane Doe</Text>
-              <Image source={require('../../assets/icons/chevron_down.png')} style={{ width: 20, height: 20 }} />
-            </View>
-          </View>
-
-          {/* Upcoming Vaccine Section */}
-          <View style={{ paddingTop: 24 }}>
-            <Text style={{ fontWeight: 'bold', fontSize: 18, color: '#4B5563' }}>Upcoming Vaccine</Text>
-            <Text style={{ fontWeight: 'normal', fontSize: 14, color: '#9E9E9E', marginTop: 8 }}>
-              Don't forget to schedule your upcoming vaccine
-            </Text>
-
-            {/* Vaccine Card */}
-            <TouchableOpacity
-              style={{
-                backgroundColor: 'white',
-                borderRadius: 8,
-                padding: 16,
-                marginVertical: 8,
-                borderWidth: 1,
-                borderColor: '#E5E7EB',
-                width: '100%',
-              }}
-            >
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <Image source={require('../../assets/icons/injection_fill.png')} style={{ width: 24, height: 24 }} />
-                  <View style={{ marginLeft: 8 }}>
-                    <Text style={{ fontWeight: 'semibold', fontSize: 16, color: '#4B5563' }}>HPV</Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <Text style={{ fontWeight: 'normal', fontSize: 14, color: '#9E9E9E', marginTop: 4 }}>
-                        Next dose due in
-                      </Text>
-                      <View
-                        style={{
-                          backgroundColor: '#FFF9F2',
-                          borderRadius: 20,
-                          paddingVertical: 4,
-                          paddingHorizontal: 10,
-                          marginLeft: 8,
-                          borderWidth: 1,
-                          borderColor: '#CD7B2E',
-                        }}
-                      >
-                        <Text style={{ color: '#CD7B2E' }}>3 Days</Text>
-                      </View>
-                    </View>
-                  </View>
-                </View>
-                <Image source={require('../../assets/icons/chevron_down.png')} style={{ width: 28, height: 28 }} />
-              </View>
-            </TouchableOpacity>
-
-          </View>
-
-          {/* Clinics Nearby Section */}
-          <View style={{ paddingTop:16 }}>
-            <Text style={{ fontWeight: 'bold', fontSize: 18, color: '#4B5563' }}>Clinics Nearby</Text>
-            <Text style={{ fontWeight: 'normal', fontSize: 14, color: '#9E9E9E', marginTop: 8, marginBottom: 16 }}>
-              Find the closest clinic to your location
-            </Text>
-
-            {/* Clinic Card */}
-            <TouchableOpacity
-              style={{
-                backgroundColor: 'white',
-                borderRadius: 10,
-                overflow: 'hidden',
-                marginBottom: 16,
-                borderWidth: 1,
-                borderColor: '#E5E7EB',
-                width: '100%',
-              }}
-              onPress={(handleNext)}
-            >
-              {/* Image at the top */}
-              <Image
-                source={require('../../assets/images/image 1.png')} 
-                style={{ width: '100%', height: 180, resizeMode: 'cover' }}
-              />
-
-              {/* Bottom section for name, location, distance */}
-              <View style={{ padding: 12 }}>
-                {/* Name, Location, Distance */}
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                  <Text style={{ fontWeight: 'bold', fontSize: 16, color: '#333' }}>
-                    Example Clinic
-                  </Text>
-                  <Text style={{ fontSize: 14, color: '#777' }}>
-                    1.2 km
-                  </Text>
-                </View>
-                
-                <Text style={{ fontSize: 14, color: '#777', marginTop: 4 }}>
-                  123 Main St, City, Country
-                </Text>
-              </View>
-            </TouchableOpacity>
-          </View>
+    <GestureHandlerRootView>
+      <SafeAreaView style={styles.container}>
+        {/* Sticky Greeting Section */}
+        <View style={styles.stickyHeader}>
+          <GreetingSection />
         </View>
+
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <UpcomingVaccineSection />
+          <ClinicsNearbySection
+            onPress={handleNextClinic}
+            onViewAll={viewAllClinic}
+          />
+          <ArticlesSection onPress={handleNextArticle} onViewDetail={viewArticlePage}/>
+        </ScrollView>
       </SafeAreaView>
     </GestureHandlerRootView>
   );
 };
+
+const GreetingSection = () => (
+  <View>
+    <Text style={styles.greetingText}>Hello,</Text>
+    <View style={styles.nameRow}>
+      <Text style={styles.nameText}>Jane Doe</Text>
+      <Image
+        source={require("../../assets/icons/chevron_down.png")}
+        style={styles.chevronIcon}
+      />
+    </View>
+  </View>
+);
+
+const UpcomingVaccineSection = () => (
+  <View style={styles.sectionSpacing}>
+    <Text style={styles.sectionTitle}>Upcoming Vaccine</Text>
+    <Text style={styles.sectionSubtitle}>lorem ipsum dolor sit amet</Text>
+    <InfoCard
+      iconSource={require("../../assets/icons/injection_fill.png")}
+      title="HPV"
+      subtitle={
+        <View style={styles.subtitleRow}>
+          <Text style={styles.subtitleText}>Next dose due in</Text>
+          <Label text="3 Days" variant="orange" />
+        </View>
+      }
+    />
+  </View>
+);
+
+const clinicData = [
+  {
+    title: "Example Clinic 1",
+    address: "123 Main St, City, Country",
+    distance: "1.2 km",
+    rating: "4.9",
+    imageSource: require("../../assets/images/image 1.png"),
+  },
+  {
+    title: "Example Clinic 2",
+    address: "123 Main St, City, Country",
+    distance: "2.5 km",
+    rating: "4.7",
+    imageSource: require("../../assets/images/image 2.png"),
+  },
+  {
+    title: "Example Clinic 3",
+    address: "456 Elm St, City, Country",
+    distance: "3.1 km",
+    rating: "4.6",
+    imageSource: require("../../assets/images/image 3.png"),
+  },
+];
+
+const ClinicsNearbySection = ({
+  onPress,
+  onViewAll,
+}: {
+  onPress: () => void;
+  onViewAll: () => void;
+}) => (
+  <View style={styles.sectionSpacing}>
+    <View style={styles.headerRow}>
+      <View>
+        <Text style={styles.sectionTitle}>Clinics Nearby</Text>
+        <Text style={[styles.sectionSubtitle, styles.mb16]}>
+          Find the closest clinic to your location
+        </Text>
+      </View>
+      <TextButton text="View All" onPress={onViewAll} />
+    </View>
+
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.clinicsScrollContent}
+    >
+      {clinicData.map((clinic, index) => (
+        <BigCard
+          key={index}
+          onPress={onPress}
+          title={clinic.title}
+          address={clinic.address}
+          distance={clinic.distance}
+          rating={clinic.rating}
+          imageSource={clinic.imageSource}
+        />
+      ))}
+    </ScrollView>
+  </View>
+);
+
+const vaccineArticles = [
+  {
+    title: "Polio: Key Facts and Global Impact",
+    subtitle:
+      "Understanding the risks, symptoms, and the ongoing global effort to eradicate polio.",
+    image: require("../../assets/images/article2.png"),
+  },
+  {
+    title: "What You Need to Know About the Varicella Vaccine",
+    subtitle:
+      "A quick guide to chickenpox prevention and how the vaccine works.",
+    image: require("../../assets/images/article1.png"),
+  },
+  {
+    title: "Flu Vaccine Myths Busted",
+    subtitle:
+      "Don’t let common misconceptions keep you from staying protected.",
+    image: require("../../assets/images/article3.png"),
+  },
+];
+
+const ArticlesSection = ({ onPress, onViewDetail }: { onPress: () => void; onViewDetail: () => void }) => {
+  return (
+    <View style={styles.sectionSpacing}>
+      <View style={styles.headerRow}>
+        <View>
+          <Text style={styles.sectionTitle}>Featured Reads</Text>
+          <Text style={[styles.sectionSubtitle, styles.mb16]}>
+            Get insights about vaccination
+          </Text>
+        </View>
+        <TextButton
+          text="View All"
+          onPress={() => console.log("Text button pressed")}
+        />
+      </View>
+
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.clinicsScrollContent}
+      >
+        {vaccineArticles.map((article, i) => (
+          <CardNoBorder
+            key={i}
+            onPress={onViewDetail}
+            title={article.title}
+            summary={article.subtitle}
+            imageSource={article.image}
+          />
+        ))}
+      </ScrollView>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  flex: {
+    flex: 1,
+  },
+  container: {
+    flex: 1,
+    backgroundColor: "#ffffff",
+    paddingHorizontal: 16,
+  },
+  innerContainer: {
+    marginVertical: 8,
+    paddingHorizontal: 16,
+  },
+  greetingText: {
+    fontSize: 12,
+    color: "#6B7280",
+  },
+  nameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  nameText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#4B5563",
+  },
+  chevronIcon: {
+    width: 20,
+    height: 20,
+  },
+  sectionSpacing: {
+    paddingTop: 16,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#4B5563",
+    flexShrink: 1,
+  },
+  sectionSubtitle: {
+    fontSize: 14,
+    color: "#9E9E9E",
+    marginTop: 0,
+    flexShrink: 1,
+  },
+  mb16: {
+    marginBottom: 16,
+  },
+  subtitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+  },
+  subtitleText: {
+    color: "#9E9E9E",
+    marginRight: 4,
+  },
+  clinicsScrollContent: {
+    paddingRight: 0,
+  },
+  stickyHeader: {
+    // paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 10,
+    backgroundColor: "#ffffff",
+    zIndex: 10,
+  },
+  scrollContent: {
+    paddingHorizontal: 0,
+    paddingBottom: 0,
+  },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+});
 
 export default Home;

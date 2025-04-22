@@ -5,7 +5,7 @@ import { ScrollView, GestureHandlerRootView } from 'react-native-gesture-handler
 import FormField from '../../components/FormField'
 import { TouchableOpacity } from 'react-native'
 import { useRouter } from 'expo-router'
-
+import PrimaryButton from '../../components/PrimaryButton'
 const SignUp = () => {
   const router = useRouter()
   const [form, setForm] = useState({
@@ -93,22 +93,11 @@ const SignUp = () => {
               error={errors.password}
             />
             
-            <TouchableOpacity 
-              style={{
-                backgroundColor: '#008B8B',
-                paddingVertical: 15,
-                borderRadius: 10,
-                marginTop: 20,
-              }}
+            <PrimaryButton
+              title="Sign up"
               onPress={handleSubmit}
-            >
-              <Text style={{ 
-                color: '#FFFFFF', 
-                fontFamily: 'pbold', 
-                fontSize: 16,
-                textAlign: 'center',
-              }}>Sign Up</Text>
-            </TouchableOpacity>
+              style={{ marginTop: 20 }}
+            />
             
             <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 16 }}>
               <Text style={{ fontFamily: 'pregular', color: '#666666' }}>Already have an account? </Text>

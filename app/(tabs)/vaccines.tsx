@@ -34,15 +34,6 @@ const Clinics = () => {
           rating="4.9"
           onPress={handleNextClinic}
         />
-
-        <TouchableOpacity style={}>
-          <Text style={styles.title}>Hepatitits B Vaccine</Text>
-          <Text style={styles.subtitle}>Protection against Hepatitis B virus</Text>
-          <View style={styles.rowItem}>
-             <Image source={icons.car} style={styles.icon} />
-            <Text>RS EMC Pluit (1km away)</Text>
-          </View>
-        </TouchableOpacity>
         </ScrollView>
       </SafeAreaView>
     </GestureHandlerRootView>
@@ -79,7 +70,6 @@ const styles = StyleSheet.create({
     paddingTop: 8,
   },
   rowItem: {
-    paddingTop: 4,
     flexDirection: "row",
     alignItems: "center",
   },
@@ -101,7 +91,7 @@ const styles = StyleSheet.create({
     marginRight: 16
   },
   title: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "500",
     flexShrink: 1,
   },
@@ -109,7 +99,7 @@ const styles = StyleSheet.create({
     fontFamily: "pregular",
     fontSize: 14,
     color: "#404040",
-    // marginTop: 4,
+    marginTop: 4,
     flexShrink: 1,
   },
 })
