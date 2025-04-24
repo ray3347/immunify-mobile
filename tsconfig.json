@@ -1,4 +1,4 @@
-{
+  {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "jsx": "react",
@@ -7,12 +7,17 @@
       "@/*": [
         "./*"
       ]
-    }
+    },
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true
   },
   "include": [
+    "src/**/*",
     "**/*.ts",
     "**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts"
-  ]
+, "tailwind.config.js" ]
 }
