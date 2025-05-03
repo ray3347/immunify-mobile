@@ -1,9 +1,9 @@
-import React from "react";
-import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import React, { useState } from "react";
+import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
+// import { SafeAreaView } from "react-native-safe-area-context";
 import {
   GestureHandlerRootView,
-  ScrollView,
+  // ScrollView,
 } from "react-native-gesture-handler";
 import { useRouter } from "expo-router";
 
@@ -13,57 +13,60 @@ import Label from "../../components/Label";
 import InfoCard from "../../components/InfoCard";
 import CardNoBorder from "../../components/CardNoBorder";
 import TextButton from "../../components/TextButton";
+import ProfileSelectionModal from "../../components/ProfileSelectionModal"; // Updated import
+
 const Home = () => {
+  const [modalVisible, setModalVisible] = useState(false);
+
+  const handleSaveProfile = (profile: any) => {
+    console.log("Profile saved:", profile);
+    setModalVisible(false);
+  };
+
   const router = useRouter();
 
-  const handleNextClinic = () => {
-    router.push("../clinic_detail");
-  };
+  const handleNextClinic = () => router.push("../clinic_detail");
+  const viewAllClinic = () => router.push("/(tabs)/vaccines");
+  const handleNextArticle = () => router.push("../clinic_detail");
+  const viewArticlePage = () => router.push("../article_detail");
 
-  const viewAllClinic = () => {
-    router.push("/(tabs)/clinics");
-  };
-
-  const handleNextArticle = () => {
-    router.push("../clinic_detail");
-  };
-
-  const viewArticlePage = () => {
-    router.push("../article_detail");
-  }
   return (
-    <GestureHandlerRootView>
-      <SafeAreaView style={styles.container}>
-        {/* Sticky Greeting Section */}
-        <View style={styles.stickyHeader}>
-          <GreetingSection />
-        </View>
+    <>
+      <ScrollView style={styles.scrollContainer}>
+        <View style={styles.container}>
+          <View style={styles.stickyHeader}>
+            {/* Move GreetingSection inside Home so it can use setModalVisible */}
+            <View>
+              <Text style={styles.greetingText}>Hello,</Text>
+              <TouchableOpacity
+                style={styles.nameRow}
+                // onPress={() => setModalVisible(true)} 
+              >
+                <Text style={styles.nameText}>Jane Doe</Text>
+                <Image
+                  source={require("../../assets/icons/chevron_down.png")}
+                  style={styles.chevronIcon}
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
 
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <UpcomingVaccineSection />
-          <ClinicsNearbySection
-            onPress={handleNextClinic}
-            onViewAll={viewAllClinic}
-          />
-          <ArticlesSection onPress={handleNextArticle} onViewDetail={viewArticlePage}/>
-        </ScrollView>
-      </SafeAreaView>
-    </GestureHandlerRootView>
+          <ScrollView showsVerticalScrollIndicator={false}>
+            <UpcomingVaccineSection />
+            {/* <ClinicsNearbySection
+              onPress={handleNextClinic}
+              onViewAll={viewAllClinic}
+            /> */}
+            <ArticlesSection
+              onPress={handleNextArticle}
+              onViewDetail={viewArticlePage}
+            />
+          </ScrollView>
+        </View>
+      </ScrollView>
+    </>
   );
 };
-
-const GreetingSection = () => (
-  <View>
-    <Text style={styles.greetingText}>Hello,</Text>
-    <View style={styles.nameRow}>
-      <Text style={styles.nameText}>Jane Doe</Text>
-      <Image
-        source={require("../../assets/icons/chevron_down.png")}
-        style={styles.chevronIcon}
-      />
-    </View>
-  </View>
-);
 
 const UpcomingVaccineSection = () => (
   <View style={styles.sectionSpacing}>
@@ -204,9 +207,12 @@ const styles = StyleSheet.create({
   flex: {
     flex: 1,
   },
-  container: {
+  scrollContainer: {
     flex: 1,
-    backgroundColor: "#ffffff",
+    backgroundColor: "#fff",
+  },
+  container: {
+    marginTop: 56,
     paddingHorizontal: 16,
   },
   innerContainer: {

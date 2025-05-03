@@ -1,38 +1,25 @@
-import React, { useState } from 'react';
-import { View, TextInput, StyleSheet } from 'react-native';
-import Ionicons from '@expo/vector-icons/Ionicons';
+import React from 'react';
+import { View, TextInput, StyleSheet, Image } from 'react-native';
 
 interface SearchInputProps {
-  placeholder?: string;
-  onSearch?: (text: string) => void;
-  style?: object;
+  placeholder: string;
+  value?: string;
+  onChangeText?: (text: string) => void;
 }
 
-const SearchInput: React.FC<SearchInputProps> = ({
-  placeholder = 'Find Nearby Clinics',
-  onSearch,
-  style,
-}) => {
-  const [searchText, setSearchText] = useState('');
-
-  const handleSearch = (text: string) => {
-    setSearchText(text);
-    if (onSearch) {
-      onSearch(text);
-    }
-  };
-
+const SearchInput = ({ placeholder, value, onChangeText }: SearchInputProps) => {
   return (
-    <View style={[styles.container]}>
-      <View style={styles.searchIconContainer}>
-        <Ionicons name="search" size={20} color="#757575" />
-      </View>
+    <View style={styles.container}>
+      <Image 
+        source={require('../assets/icons/search.png')} 
+        style={styles.icon}
+      />
       <TextInput
         style={styles.input}
         placeholder={placeholder}
-        placeholderTextColor="#757575"
-        value={searchText}
-        onChangeText={handleSearch}
+        placeholderTextColor="#9CA3AF"
+        value={value}
+        onChangeText={onChangeText}
       />
     </View>
   );
@@ -40,27 +27,23 @@ const SearchInput: React.FC<SearchInputProps> = ({
 
 const styles = StyleSheet.create({
   container: {
+    backgroundColor: '#F3F4F6',
+    borderRadius: 8,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 6,
-    paddingHorizontal: 16,
-    paddingVertical: 4,
-    // marginHorizontal: 16,
-    // marginVertical: 8,
-    width: '100%',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
+    paddingHorizontal: 12,
+    height: 44,
   },
-  searchIconContainer: {
+  icon: {
+    width: 16,
+    height: 16,
     marginRight: 8,
+    tintColor: '#9CA3AF',
   },
   input: {
     flex: 1,
-    fontSize: 14,
-    color: '#424242',
-    paddingVertical: 8,
-    fontWeight: '400',
+    fontSize: 16,
+    color: '#1F2937',
   },
 });
 

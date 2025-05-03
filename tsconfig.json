@@ -1,16 +1,24 @@
-  {
+{
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "moduleResolution": "node",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "strict": true
+    "strict": true,
+    "allowJs": true,
+    "baseUrl": ".",
+    "paths": {
+      "*": ["src/@types/*"]
+    },
+    "typeRoots": ["./node_modules/@types", "./src/@types"]
   },
   "include": [
     "src/**/*",
     "**/*.ts",
     "**/*.tsx",
     ".expo/types/**/*.ts",
-    "expo-env.d.ts"
-, "tailwind.config.js" ]
+    "expo-env.d.ts",
+    "tailwind.config.js",
+    "src/@types/**/*.d.ts"
+  ]
 }

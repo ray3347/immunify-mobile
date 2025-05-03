@@ -74,14 +74,15 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   title: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: "500",
+    color: "#333",
   },
   subtitle: {
-    fontFamily: "pregular",
+    fontFamily: "400",
     fontSize: 14,
-    color: "#404040",
-    marginTop: 0,
+    color: "#666",
+    marginTop: 2,
   },
 });
 

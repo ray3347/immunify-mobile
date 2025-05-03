@@ -1,44 +1,171 @@
-import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native'
-import React from 'react'
-
-import ListCard from '../../components/ListCard';
-import { GestureHandlerRootView, ScrollView } from 'react-native-gesture-handler';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  ActivityIndicator,
+  Alert,
+} from "react-native";
+import React, { useEffect, useState } from "react";
+import VaccineCard from "../../components/VaccineCard";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import SearchInput from "../../components/SearchInput";
+import HttpService from "../../constants/HttpService";
 
-import SearchInput from '../../components/SearchInput';
-const icons = {
-  car: require("../../assets/icons/car.png"),
-  star: require("../../assets/icons/star.png"),
-  location: require("../../assets/icons/location-marker.png"),
-}
+// Define the types for your data structures
+type RelatedDisease = {
+  id: string;
+  name: string;
+  relatedVaccines: any[];
+  information: string;
+};
 
+type Vaccine = {
+  id: string;
+  vaccineName: string;
+  vaccineInformation: string;
+  doseInterval: number;
+  doses: number;
+  informationSummary: string[];
+  relatedDiseases: RelatedDisease[];
+};
 
-const Clinics = () => {
+// Fallback data to use when API fails
+const fallbackVaccines: Vaccine[] = [
+  {
+    id: "1",
+    vaccineName: "Hepatitis B Vaccine",
+    vaccineInformation: "Protects against hepatitis B virus infection",
+    doseInterval: 30,
+    doses: 3,
+    informationSummary: ["Recommended for all ages", "3 doses required"],
+    relatedDiseases: [{ id: "1", name: "Hepatitis B", relatedVaccines: [], information: "" }]
+  },
+  {
+    id: "2",
+    vaccineName: "COVID-19 Vaccine",
+    vaccineInformation: "Protects against COVID-19 infection",
+    doseInterval: 21,
+    doses: 2,
+    informationSummary: ["Recommended for all adults", "2 doses required"],
+    relatedDiseases: [{ id: "2", name: "COVID-19", relatedVaccines: [], information: "" }]
+  },
+  {
+    id: "3",
+    vaccineName: "Influenza Vaccine",
+    vaccineInformation: "Annual protection against seasonal flu",
+    doseInterval: 365,
+    doses: 1,
+    informationSummary: ["Recommended annually", "One dose per season"],
+    relatedDiseases: [{ id: "3", name: "Influenza", relatedVaccines: [], information: "" }]
+  },
+  {
+    id: "4",
+    vaccineName: "MMR Vaccine",
+    vaccineInformation: "Protects against measles, mumps, and rubella",
+    doseInterval: 28,
+    doses: 2,
+    informationSummary: ["Recommended for children", "2 doses required"],
+    relatedDiseases: [
+      { id: "4", name: "Measles", relatedVaccines: [], information: "" },
+      { id: "5", name: "Mumps", relatedVaccines: [], information: "" },
+      { id: "6", name: "Rubella", relatedVaccines: [], information: "" }
+    ]
+  }
+];
+
+const Vaccines = () => {
   const router = useRouter();
-  const handleNextClinic = () => {
-    router.push("../clinic_detail");
+  const [cardData, setCardData] = useState<Vaccine[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  useEffect(() => {
+    const fetchVaccines = async () => {
+      try {
+        setLoading(true);
+        const res = await HttpService.get<{ data: Vaccine[] }>("/wiki/vaccine");
+        setCardData(res.data.data);
+      } catch (error) {
+        console.error("Failed to fetch vaccine data", error);
+        // Use fallback data when API fails
+        setCardData(fallbackVaccines);
+        Alert.alert(
+          "Connection Error",
+          "Could not connect to server. Showing sample data instead.",
+          [{ text: "OK" }]
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVaccines();
+  }, []);
+
+  const handleVaccinePress = (vaccine: Vaccine) => {
+    // Navigate with vaccine data
+    router.push({
+      pathname: "/vaccine_detail",
+      params: { vaccineId: vaccine.id }
+    });
   };
-  return (
-    <GestureHandlerRootView>
-      <SafeAreaView style={styles.container}>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-        <SearchInput 
-        placeholder="Find Nearby Clinics" 
+
+  const filteredVaccines = cardData.filter(vaccine => 
+    vaccine.vaccineName.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const renderHeader = () => (
+    <View style={{ marginBottom: 16 }}>
+      <SearchInput 
+        placeholder="Search Vaccine" 
+        onChangeText={text => setSearchQuery(text)}
+        value={searchQuery}
       />
-        <ListCard
-          imageSource={require('../../assets/images/image 2.png')}
-          title="RS EMC Pulomas"
-          subtitle="Jl. Pulo Mas Bar. VI No.20, Kec. Pulo Gadung.."
-          distance="1.2 km"
-          rating="4.9"
-          onPress={handleNextClinic}
-        />
-        </ScrollView>
+    </View>
+  );
+
+  const renderEmptyList = () => (
+    <View style={styles.emptyContainer}>
+      <Text style={styles.emptyText}>No vaccines found</Text>
+    </View>
+  );
+
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaView style={styles.container}>
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#008B8B" />
+            <Text style={styles.loadingText}>Loading vaccines...</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={filteredVaccines}
+            keyExtractor={(item) => item.id}
+            numColumns={2}
+            columnWrapperStyle={styles.row}
+            contentContainerStyle={styles.scrollContent}
+            ListHeaderComponent={renderHeader}
+            ListEmptyComponent={renderEmptyList}
+            renderItem={({ item }) => (
+              <VaccineCard
+                image={require("../../assets/images/vaccine.png")}
+                title={item.vaccineName}
+                location={item.relatedDiseases?.[0]?.name ?? "General Vaccine"}
+                distance={"Available"}
+                price={"Free"} 
+                onPress={() => handleVaccinePress(item)}
+              />
+            )}
+          />
+        )}
       </SafeAreaView>
     </GestureHandlerRootView>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -46,62 +173,36 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
     paddingTop: 16,
   },
+  row: {
+    justifyContent: "space-between",
+    marginBottom: 24,
+  },
   scrollContent: {
     paddingHorizontal: 16,
-    paddingBottom: 0,
+    paddingBottom: 16,
+    flexGrow: 1,
   },
-  content: {
-    backgroundColor: "white",
-    // borderRadius: 8,
-    // padding: 16,
-    marginVertical: 8,
-    // borderWidth: 1,
-    // borderColor: "#E5E7EB",
-    width: "100%",
-    flexDirection: "row",
-    // alignItems: "center",
-  },
-  textContainer: {
+  loadingContainer: {
     flex: 1,
-  },
-  statsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingTop: 8,
-  },
-  rowItem: {
-    flexDirection: "row",
+    justifyContent: "center",
     alignItems: "center",
   },
-  icon: {
-    width: 20,
-    height: 20,
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: "#555",
   },
-  starIcon: {
-    marginRight: 4,
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingTop: 100,
   },
-  statText: {
-    fontSize: 14,
-    color: "#777",
-    marginLeft: 4,
+  emptyText: {
+    fontSize: 16,
+    color: "#555",
+    textAlign: "center",
   },
-  image: {
-    height: 80,
-    width: 80,
-    marginRight: 16
-  },
-  title: {
-    fontSize: 14,
-    fontWeight: "500",
-    flexShrink: 1,
-  },
-  subtitle: {
-    fontFamily: "pregular",
-    fontSize: 14,
-    color: "#404040",
-    marginTop: 4,
-    flexShrink: 1,
-  },
-})
+});
 
-export default Clinics
+export default Vaccines;
