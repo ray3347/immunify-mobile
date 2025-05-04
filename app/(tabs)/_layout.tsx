@@ -52,7 +52,7 @@ const TabsLayout: React.FC = () => {
     >
       {[
         renderTab("home", "Home", icons.home),
-        renderTab("clinics", "Clinic", icons.clinic),
+        renderTab("vaccines", "Vaccines", icons.clinic),
         renderTab("tracker", "Tracker", icons.tracker),
         renderTab("profile", "Profile", icons.profile),
       ].map((tab) => (

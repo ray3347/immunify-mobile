@@ -30,12 +30,23 @@ const fontMap = {
 
 const BackButton = ({ color = "#676767", marginLeft = 0 }) => {
   const router = useRouter();
+
   return (
-    <TouchableOpacity onPress={() => router.back()} style={{ marginRight: 12 }}>
+    <TouchableOpacity
+      onPress={() => {
+        if (router.canGoBack()) {
+          router.back();
+        } else {
+          router.replace("/"); // or router.push("/(tabs)") or any safe fallback
+        }
+      }}
+      style={{ marginRight: 12 }}
+    >
       <Ionicons name="arrow-back" size={24} color={color} />
     </TouchableOpacity>
   );
 };
+
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts(fontMap);
@@ -49,6 +60,22 @@ export default function RootLayout() {
   return (
     <Stack>
       <Stack.Screen
+        name="set_appointment"
+        options={{
+          headerShown: true,
+          title: "Booking Profiles",
+          headerLeft: () => <BackButton />,
+        }}
+      />
+      <Stack.Screen
+        name="book_clinic"
+        options={{
+          headerShown: true,
+          title: "Book Clinic",
+          headerLeft: () => <BackButton />,
+        }}
+      />
+      <Stack.Screen
         name="article_detail"
         options={{
           headerShown: true,
@@ -56,19 +83,12 @@ export default function RootLayout() {
           headerLeft: () => <BackButton />,
         }}
       />
+      
       <Stack.Screen
-        name="set_appointment"
+        name="vaccine_detail"
         options={{
           headerShown: true,
-          title: "Set Appointment",
-          headerLeft: () => <BackButton />,
-        }}
-      />
-      <Stack.Screen
-        name="clinic_detail"
-        options={{
-          headerShown: true,
-          title: "Example Clinic",
+          title: "Vaccine Details",
           headerLeft: () => <BackButton />,
         }}
       />

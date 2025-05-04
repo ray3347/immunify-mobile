@@ -22,16 +22,16 @@ const SignUp = () => {
 
   const router = useRouter();
   const [form, setForm] = useState({
-    fullname: "",
-    email: "",
-    password: "",
-  });
-
+    email: '',
+    password: '',
+    confirmPassword:''
+  })
+  
   const [errors, setErrors] = useState({
-    fullname: "",
-    email: "",
-    password: "",
-  });
+    email: '',
+    password: '',
+    confirmPassword:''
+  })
 
   const handleChange = (field: string, value: string) => {
     setForm((prevForm) => ({
@@ -42,14 +42,12 @@ const SignUp = () => {
 
   const handleSubmit = () => {
     const newErrors = {
-      fullname: "",
-      email: "",
-      password: "",
-    };
-
-    if (!form.fullname) {
-      newErrors.fullname = "Full name is required";
+      email: '',
+      password: '',
+    confirmPassword:''
     }
+    
+   
 
     if (!form.email) {
       newErrors.email = "Email is required";
@@ -62,11 +60,16 @@ const SignUp = () => {
     } else if (form.password.length < 6) {
       newErrors.password = "Password must be at least 6 characters";
     }
-
-    setErrors(newErrors);
-
-    if (!newErrors.email && !newErrors.password) {
-      router.push("/(tabs)/home");
+    
+    if (!form.confirmPassword) {
+      newErrors.confirmPassword = 'Please confirm your password';
+    } else if (form.password !== form.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+    }
+    setErrors(newErrors)
+    
+    if (!newErrors.email && !newErrors.password && !newErrors.confirmPassword) {
+      router.push('/(tabs)/home')
     }
   };
 
@@ -79,24 +82,7 @@ const SignUp = () => {
       <SafeAreaView style={{ flex: 1, backgroundColor: "#ffffff" }}>
         <ScrollView>
           <View style={{ paddingHorizontal: 20, paddingVertical: 20 }}>
-            <Text
-              style={{
-                fontSize: 24,
-                fontFamily: "pbold",
-                color: "#333333",
-                marginBottom: 20,
-              }}
-            >
-              Create Account
-            </Text>
-            <FormField
-              label="Parent Full Name"
-              value={form.fullname}
-              onChangeText={(text) => handleChange("fullname", text)}
-              placeholder="Enter your full name"
-              keyboardType="default"
-              error={errors.fullname}
-            />
+            <Text style={{ fontSize: 24, fontFamily: 'pbold', color: '#333333', marginBottom: 20 }}>Create Account</Text>
             <FormField
               label="Email"
               value={form.email}
@@ -114,7 +100,16 @@ const SignUp = () => {
               secureTextEntry={true}
               error={errors.password}
             />
+            <FormField
+              label="Confirm Password"
+              value={form.confirmPassword}
+              onChangeText={(text) => handleChange('confirmPassword', text)}
+              placeholder="Confirm your password"
+              secureTextEntry={true}
+              error={errors.confirmPassword}
+            />
 
+            
             <PrimaryButton
               title="Sign up"
               onPress={handleSubmit}

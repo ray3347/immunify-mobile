@@ -15,7 +15,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/icons/splash-icon.png",
         "backgroundColor": "#008B8B"
-      }
+      },
+      "package": "com.anonymous.immunify"
     },
     "web": {
       "bundler": "metro",
