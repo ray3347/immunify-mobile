@@ -35,7 +35,7 @@ const Clinics = () => {
           onPress={handleNextClinic}
         />
 
-        <TouchableOpacity style={}>
+        <TouchableOpacity>
           <Text style={styles.title}>Hepatitits B Vaccine</Text>
           <Text style={styles.subtitle}>Protection against Hepatitis B virus</Text>
           <View style={styles.rowItem}>

@@ -6,6 +6,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { images } from "../constants";
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import HttpService from "@/constants/HttpService";
 
 const { width } = Dimensions.get("window");
 
@@ -31,6 +32,30 @@ export default function Onboarding() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
   const router = useRouter();
+
+  const fetchVax = async () => {
+    const res = await HttpService.get("/wiki/vaccine").then((res)=> {
+      console.log(res)
+
+      return res;
+    });
+
+    return res.data;
+  }
+
+  useEffect(()=>{
+    // const ha = fetchVax();
+    HttpService.get("/wiki/vaccine").then((res)=> {
+      console.log("babi", res.data)
+
+      return res;
+    })
+    .catch((err)=>{
+      console.log("error", err)
+    })
+    ;
+    // console.log("babi", ha)
+  },[]);
 
   useEffect(() => {
     if (scrollViewRef.current) {
