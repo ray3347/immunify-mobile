@@ -1,5 +1,12 @@
-import React, { useState } from "react";
-import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+} from "react-native";
 // import { SafeAreaView } from "react-native-safe-area-context";
 import {
   GestureHandlerRootView,
@@ -14,9 +21,15 @@ import InfoCard from "../../components/InfoCard";
 import CardNoBorder from "../../components/CardNoBorder";
 import TextButton from "../../components/TextButton";
 import ProfileSelectionModal from "../../components/ProfileSelectionModal"; // Updated import
+import { useActiveSession } from "../../utilities/zustand";
 
 const Home = () => {
   const [modalVisible, setModalVisible] = useState(false);
+  const {activeAccount, activeUser} = useActiveSession();
+
+  useEffect(()=>{
+    console.log(activeUser);
+  },[])
 
   const handleSaveProfile = (profile: any) => {
     console.log("Profile saved:", profile);
@@ -40,9 +53,11 @@ const Home = () => {
               <Text style={styles.greetingText}>Hello,</Text>
               <TouchableOpacity
                 style={styles.nameRow}
-                // onPress={() => setModalVisible(true)} 
+                // onPress={() => setModalVisible(true)}
               >
-                <Text style={styles.nameText}>Jane Doe</Text>
+                <Text style={styles.nameText}>
+                    {activeUser?.fullName}
+                  </Text>
                 <Image
                   source={require("../../assets/icons/chevron_down.png")}
                   style={styles.chevronIcon}
@@ -168,7 +183,13 @@ const vaccineArticles = [
   },
 ];
 
-const ArticlesSection = ({ onPress, onViewDetail }: { onPress: () => void; onViewDetail: () => void }) => {
+const ArticlesSection = ({
+  onPress,
+  onViewDetail,
+}: {
+  onPress: () => void;
+  onViewDetail: () => void;
+}) => {
   return (
     <View style={styles.sectionSpacing}>
       <View style={styles.headerRow}>

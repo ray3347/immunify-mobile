@@ -9,6 +9,8 @@ import React, { useState } from "react";
 import ProfilePic from "../../components/ProfilePic";
 import InfoCard from "../../components/InfoCard";
 import Label from "../../components/Label";
+import { useActiveSession } from "../../utilities/zustand";
+import dayjs from "dayjs";
 
 const icons = {
   cake: require("../../assets/icons/cake.png"),
@@ -17,6 +19,7 @@ const icons = {
 
 };
 const Profile = () => {
+  const {activeUser} = useActiveSession();
   const [activeTab, setActiveTab] = useState("completed vaccination");
 
   const renderCompletedVac = () => (
@@ -63,12 +66,12 @@ const Profile = () => {
         <View style={styles.contentWrapper}>
           <View style={styles.rowItem}>
             <View style={styles.mb16}>
-              <ProfilePic name="Jane Doe" size={64} />
+              <ProfilePic name={activeUser?.fullName ?? "Jane Doe"} size={64} />
             </View>
 
             <View>
               <View style={styles.nameRow}>
-                <Text style={styles.title}>Jane Doe</Text>
+                <Text style={styles.title}>{activeUser?.fullName}</Text>
                 <Image
                   source={require("../../assets/icons/chevron_down.png")}
                   style={styles.chevronIcon}
@@ -77,12 +80,12 @@ const Profile = () => {
               <View style={styles.statsRow}>
                 <View style={styles.rowItem}>
                   <Image source={icons.cake} style={styles.icon} />
-                  <Text>June 20, 2008</Text>
+                  <Text>{dayjs(activeUser?.dateOfBirth).format("DD MMMM YYYY")}</Text>
                 </View>
 
                 <View style={styles.rowItem}>
                   <Image source={icons.female} style={styles.icon} />
-                  <Text>Female</Text>
+                  <Text>{activeUser?.gender == "M" ? "Male" : "Female"}</Text>
                 </View>
               </View>
             </View>

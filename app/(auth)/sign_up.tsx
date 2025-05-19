@@ -9,15 +9,10 @@ import FormField from "../../components/FormField";
 import { TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import PrimaryButton from "../../components/PrimaryButton";
-import HttpService from "@/constants/HttpService";
 const SignUp = () => {
   const [testConfig, setTestConfig] = useState<any[]>([]);
 
   useEffect(()=>{
-    HttpService.get("/wiki/vaccine").then((res)=>{
-      setTestConfig(res.data.data);
-      console.log(res.data.data)
-    })
   },[]);
 
   const router = useRouter();

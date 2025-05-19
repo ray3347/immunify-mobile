@@ -5,8 +5,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import "react-native-reanimated";
-
-import { useColorScheme } from '@/hooks/useColorScheme';
 import React from 'react';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -59,6 +57,8 @@ export default function RootLayout() {
 
   return (
     <Stack>
+      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       <Stack.Screen
         name="set_appointment"
         options={{
@@ -93,8 +93,6 @@ export default function RootLayout() {
         }}
       />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-      <Stack.Screen name="index" options={{ headerShown: false }} />
     </Stack>
   );
 }

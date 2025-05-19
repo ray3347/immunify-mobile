@@ -13,72 +13,73 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import SearchInput from "../../components/SearchInput";
 import HttpService from "../../constants/HttpService";
+import { IVaccine } from "../../interfaces/db/IVaccine";
 
 // Define the types for your data structures
-type RelatedDisease = {
-  id: string;
-  name: string;
-  relatedVaccines: any[];
-  information: string;
-};
+// type RelatedDisease = {
+//   id: string;
+//   name: string;
+//   relatedVaccines: any[];
+//   information: string;
+// };
 
-type Vaccine = {
-  id: string;
-  vaccineName: string;
-  vaccineInformation: string;
-  doseInterval: number;
-  doses: number;
-  informationSummary: string[];
-  relatedDiseases: RelatedDisease[];
-};
+// type Vaccine = {
+//   id: string;
+//   vaccineName: string;
+//   vaccineInformation: string;
+//   doseInterval: number;
+//   doses: number;
+//   informationSummary: string[];
+//   relatedDiseases: RelatedDisease[];
+// };
 
 // Fallback data to use when API fails
-const fallbackVaccines: Vaccine[] = [
-  {
-    id: "1",
-    vaccineName: "Hepatitis B Vaccine",
-    vaccineInformation: "Protects against hepatitis B virus infection",
-    doseInterval: 30,
-    doses: 3,
-    informationSummary: ["Recommended for all ages", "3 doses required"],
-    relatedDiseases: [{ id: "1", name: "Hepatitis B", relatedVaccines: [], information: "" }]
-  },
-  {
-    id: "2",
-    vaccineName: "COVID-19 Vaccine",
-    vaccineInformation: "Protects against COVID-19 infection",
-    doseInterval: 21,
-    doses: 2,
-    informationSummary: ["Recommended for all adults", "2 doses required"],
-    relatedDiseases: [{ id: "2", name: "COVID-19", relatedVaccines: [], information: "" }]
-  },
-  {
-    id: "3",
-    vaccineName: "Influenza Vaccine",
-    vaccineInformation: "Annual protection against seasonal flu",
-    doseInterval: 365,
-    doses: 1,
-    informationSummary: ["Recommended annually", "One dose per season"],
-    relatedDiseases: [{ id: "3", name: "Influenza", relatedVaccines: [], information: "" }]
-  },
-  {
-    id: "4",
-    vaccineName: "MMR Vaccine",
-    vaccineInformation: "Protects against measles, mumps, and rubella",
-    doseInterval: 28,
-    doses: 2,
-    informationSummary: ["Recommended for children", "2 doses required"],
-    relatedDiseases: [
-      { id: "4", name: "Measles", relatedVaccines: [], information: "" },
-      { id: "5", name: "Mumps", relatedVaccines: [], information: "" },
-      { id: "6", name: "Rubella", relatedVaccines: [], information: "" }
-    ]
-  }
-];
+// const fallbackVaccines: IVaccine[] = [
+//   {
+//     id: "1",
+//     vaccineName: "Hepatitis B Vaccine",
+//     vaccineInformation: "Protects against hepatitis B virus infection",
+//     doseInterval: 30,
+//     doses: 3,
+//     informationSummary: ["Recommended for all ages", "3 doses required"],
+//     availableAt: []
+//   },
+//   {
+//     id: "2",
+//     vaccineName: "COVID-19 Vaccine",
+//     vaccineInformation: "Protects against COVID-19 infection",
+//     doseInterval: 21,
+//     doses: 2,
+//     informationSummary: ["Recommended for all adults", "2 doses required"],
+//     relatedDiseases: [{ id: "2", name: "COVID-19", relatedVaccines: [], information: "" }]
+//   },
+//   {
+//     id: "3",
+//     vaccineName: "Influenza Vaccine",
+//     vaccineInformation: "Annual protection against seasonal flu",
+//     doseInterval: 365,
+//     doses: 1,
+//     informationSummary: ["Recommended annually", "One dose per season"],
+//     relatedDiseases: [{ id: "3", name: "Influenza", relatedVaccines: [], information: "" }]
+//   },
+//   {
+//     id: "4",
+//     vaccineName: "MMR Vaccine",
+//     vaccineInformation: "Protects against measles, mumps, and rubella",
+//     doseInterval: 28,
+//     doses: 2,
+//     informationSummary: ["Recommended for children", "2 doses required"],
+//     relatedDiseases: [
+//       { id: "4", name: "Measles", relatedVaccines: [], information: "" },
+//       { id: "5", name: "Mumps", relatedVaccines: [], information: "" },
+//       { id: "6", name: "Rubella", relatedVaccines: [], information: "" }
+//     ]
+//   }
+// ];
 
 const Vaccines = () => {
   const router = useRouter();
-  const [cardData, setCardData] = useState<Vaccine[]>([]);
+  const [cardData, setCardData] = useState<IVaccine[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -86,12 +87,14 @@ const Vaccines = () => {
     const fetchVaccines = async () => {
       try {
         setLoading(true);
-        const res = await HttpService.get<{ data: Vaccine[] }>("/wiki/vaccine");
+        const res = await HttpService.get<{ data: IVaccine[] }>("/wiki/vaccine");
         setCardData(res.data.data);
+
+        console.log(res.data.data)
       } catch (error) {
         console.error("Failed to fetch vaccine data", error);
         // Use fallback data when API fails
-        setCardData(fallbackVaccines);
+        setCardData([]);
         Alert.alert(
           "Connection Error",
           "Could not connect to server. Showing sample data instead.",
@@ -105,7 +108,7 @@ const Vaccines = () => {
     fetchVaccines();
   }, []);
 
-  const handleVaccinePress = (vaccine: Vaccine) => {
+  const handleVaccinePress = (vaccine: IVaccine) => {
     // Navigate with vaccine data
     router.push({
       pathname: "/vaccine_detail",
@@ -113,7 +116,7 @@ const Vaccines = () => {
     });
   };
 
-  const filteredVaccines = cardData.filter(vaccine => 
+  const filteredVaccines = searchQuery !== "" && cardData.filter(vaccine =>
     vaccine.vaccineName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -143,7 +146,7 @@ const Vaccines = () => {
           </View>
         ) : (
           <FlatList
-            data={filteredVaccines}
+            data={cardData}
             keyExtractor={(item) => item.id}
             numColumns={2}
             columnWrapperStyle={styles.row}
@@ -152,11 +155,12 @@ const Vaccines = () => {
             ListEmptyComponent={renderEmptyList}
             renderItem={({ item }) => (
               <VaccineCard
-                image={require("../../assets/images/vaccine.png")}
+                image={item.image != "" ? {uri: item.image}  : require( "../../assets/images/vaccine.png")}
                 title={item.vaccineName}
-                location={item.relatedDiseases?.[0]?.name ?? "General Vaccine"}
+                location={item.informationSummary[0]}
+                // location={item.relatedDiseases?.[0]?.name ?? "General Vaccine"}
                 distance={"Available"}
-                price={"Free"} 
+                price={item.price} 
                 onPress={() => handleVaccinePress(item)}
               />
             )}

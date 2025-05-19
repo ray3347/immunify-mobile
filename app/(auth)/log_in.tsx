@@ -1,10 +1,5 @@
-import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-} from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import {
   GestureHandlerRootView,
   ScrollView,
@@ -14,12 +9,27 @@ import { useRouter } from "expo-router";
 
 import FormField from "../../components/FormField";
 import PrimaryButton from "../../components/PrimaryButton";
+import HttpService from "../../constants/HttpService";
+import MD5 from "crypto-js/md5";
+import { IApiResult } from "../../interfaces/api";
+import { useActiveSession } from "../../utilities/zustand";
+import { IUserAccount } from "../../interfaces/db/IAccount";
+import { useNavigation } from "@react-navigation/native";
 
 const Login = () => {
   const router = useRouter();
+  const navigation = useNavigation();
+  const { activeAccount, switchAccount } = useActiveSession();
 
   const [form, setForm] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({ email: "", password: "" });
+
+  useEffect(()=>{
+    // console.log(activeAccount)
+    if(activeAccount){
+      router.push("/(tabs)/home");
+    }
+  },[activeAccount]);
 
   const handleChange = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -46,7 +56,24 @@ const Login = () => {
 
   const handleSubmit = () => {
     if (validate()) {
-      router.push("/(tabs)/home");
+      const requestBody = {
+        userData: {
+          hashedUsername: form.email,
+          hashedPassword: MD5(form.password).toString(),
+        },
+      };
+      HttpService.post("/user/login", requestBody).then((res: IApiResult) => {
+        const user = res.data.data as IUserAccount;
+        switchAccount(user);
+        console.log(activeAccount);
+        // setTimeout(() => {
+        //   router.push("/(tabs)/home");
+        // }, 0);
+      });
+      // .then(()=>{
+
+      //   router.push("/(tabs)/home");
+      // })
     }
   };
 
@@ -78,7 +105,11 @@ const Login = () => {
             error={errors.password}
           />
 
-          <PrimaryButton title="Login" onPress={handleSubmit} style={styles.loginButton} />
+          <PrimaryButton
+            title="Login"
+            onPress={handleSubmit}
+            style={styles.loginButton}
+          />
 
           <View style={styles.footer}>
             <Text style={styles.footerText}>Don't have an account? </Text>

@@ -36,7 +36,7 @@ const VaccineCard: React.FC<CardItemProps> = ({ image, title, location, distance
 
       <View style={{ paddingTop: 12 }}>
         <Text style={styles.subtitle}>Start from</Text>
-        <Text style={styles.title}>Rp.{price}</Text>
+        <Text style={styles.title}>{price}</Text>
       </View>
     </View>
   </TouchableOpacity>
