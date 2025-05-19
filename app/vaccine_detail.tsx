@@ -5,14 +5,34 @@ import {
   Image,
   TouchableOpacity,
   ScrollView,
+  ActivityIndicator,
 } from "react-native";
-import React from "react";
-import { useRouter } from "expo-router";
+import React, { act, useEffect, useState } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import InfoCard from "../components/InfoCard";
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { useVaccineList } from "../utilities/zustand";
+import { IVaccine } from "../interfaces/db/IVaccine";
 
 const VaccineDetail = () => {
   const router = useRouter();
+  const { vaccineId } = useLocalSearchParams();
+  const { vaccineList } = useVaccineList();
+  const [activeVaccine, setActiveVaccine] = useState<IVaccine>();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    console.log(vaccineId)
+    setLoading(true);
+    if (vaccineId && vaccineList.length > 0) {
+      const active = vaccineList.find((x) => x.id === vaccineId);
+      if (active) {
+        setActiveVaccine(active);
+      }
+    }
+    setLoading(false);
+  }, []);
+
   const locations = [
     { name: "Downtown Medical Center", distance: "0.8" },
     { name: "City Health Clinic", distance: "1.2" },
@@ -36,90 +56,94 @@ const VaccineDetail = () => {
   };
   return (
     <ScrollView style={styles.scrollContainer}>
-      <View style={styles.container}>
-        {/* Header */}
-        <View style={styles.card}>
-          <View style={styles.centeredRow}>
-            
-            <Image
-              source={require("../assets/images/vaccine.png")}
-              style={styles.vaccineImage}
-            />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.headingText}>COVID-19 Vaccine</Text>
-              <View style={styles.mt8}>
-                <Text style={styles.labelText}>Start from</Text>
-                <Text style={styles.titleText}>Rp.500.000</Text>
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#008B8B" />
+          <Text style={styles.loadingText}>Loading vaccines...</Text>
+        </View>
+      ) : (
+        <View style={styles.container}>
+          {/* Header */}
+          <View style={styles.card}>
+            <View style={styles.centeredRow}>
+              <Image
+                source={activeVaccine?.image != "" ? {uri: activeVaccine?.image} :require("../assets/images/vaccine.png")}
+                style={styles.vaccineImage}
+              />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.headingText}>{activeVaccine?.vaccineName}</Text>
+                <View style={styles.mt8}>
+                  <Text style={styles.labelText}>Start from</Text>
+                  <Text style={styles.titleText}>{activeVaccine?.price} / dose</Text>
+                </View>
               </View>
             </View>
           </View>
-        </View>
 
-        {/* Info Icons */}
-        <View style={styles.card}>
-          <View style={styles.infoIconsContainer}>
-            <View style={styles.infoItem}>   
-              <Image
-                source={require("../assets/icons/injection_icon.png")}
-                style={styles.iconMedium}
-              />
-              <Text style={styles.labelText}>2 Doses</Text>
-            </View>
-            <View style={styles.divider} />
-            <View style={styles.infoItem}>
-              <Image
-                source={require("../assets/icons/clock.png")}
-                style={styles.iconMedium}
-              />
-              <Text style={styles.labelText}>21 Days Apart</Text>
-            </View>
-            <View style={styles.divider} />
-            <View style={styles.infoItem}>
-              <Image
-                source={require("../assets/icons/user-check.png")}
-                style={styles.iconMedium}
-              />
-              <Text style={styles.labelText}>12 and older</Text>
+          {/* Info Icons */}
+          <View style={styles.card}>
+            <View style={styles.infoIconsContainer}>
+              <View style={styles.infoItem}>
+                <Image
+                  source={require("../assets/icons/injection_icon.png")}
+                  style={styles.iconMedium}
+                />
+                <Text style={styles.labelText}>{activeVaccine?.doses.toString()} Doses</Text>
+              </View>
+              <View style={styles.divider} />
+              <View style={styles.infoItem}>
+                <Image
+                  source={require("../assets/icons/clock.png")}
+                  style={styles.iconMedium}
+                />
+                <Text style={styles.labelText}>{activeVaccine?.doseInterval.toString()} Days Apart</Text>
+              </View>
+              <View style={styles.divider} />
+              <View style={styles.infoItem}>
+                <Image
+                  source={require("../assets/icons/user-check.png")}
+                  style={styles.iconMedium}
+                />
+                <Text style={styles.labelText}>{activeVaccine?.minimumAge.toString()} and older</Text>
+              </View>
             </View>
           </View>
-        </View>
 
-        {/* About Section */}
-        <View style={styles.card}>
-          <Text style={styles.headingText}>About This Vaccine</Text>
-          <Text style={styles.bodyText}>
-            The Pfizer-BioNTech COVID-19 vaccine is an mRNA vaccine that requires 2 shots, 21 days 
-            apart. Clinical trials showed it is 95% effective at preventing laboratory-confirmed COVID-19 
-            illness.
-          </Text>
-        </View>
+          {/* About Section */}
+          <View style={styles.card}>
+            <Text style={styles.headingText}>About This Vaccine</Text>
+            <Text style={styles.bodyText}>
+              {activeVaccine?.vaccineInformation}
+            </Text>
+          </View>
 
-        <View style={styles.card}>
-          <Text style={styles.headingText}>Possible Side Effects</Text>
-          <View style={styles.sideEffectsContainer}>
-            {sideEffects.map((effect, index) => (
-              <View key={index} style={styles.sideEffectItem}>
-                <View style={styles.dotIcon} />
-                <Text style={styles.bodyText}>{effect}</Text>
-              </View>
+          <View style={styles.card}>
+            <Text style={styles.headingText}>Possible Side Effects</Text>
+            <View style={styles.sideEffectsContainer}>
+              {activeVaccine?.sideEffects.map((effect, index) => (
+                <View key={index} style={styles.sideEffectItem}>
+                  <View style={styles.dotIcon} />
+                  <Text style={styles.bodyText}>{effect}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          <View style={styles.locationsContainer}>
+            <Text style={styles.headingText}>Available at</Text>
+            {activeVaccine?.availableAt.map((location, index) => (
+              <InfoCard
+                key={index}
+                iconSource={require("../assets/icons/hospital.png")}
+                rightIconSource={require("../assets/icons/chevron_down.png")}
+                title={location.name}
+                // subtitle={`${location.distance} km away`}
+                onPress={goToBookAppointment}
+              />
             ))}
           </View>
         </View>
-
-        <View style={styles.locationsContainer}>
-          <Text style={styles.headingText}>Available at</Text>
-          {locations.map((location, index) => (
-           <InfoCard
-            key={index}
-            iconSource={require("../assets/icons/hospital.png")}
-            rightIconSource={require("../assets/icons/chevron_down.png")} 
-            title={location.name}
-            subtitle={`${location.distance} km away`}
-            onPress={goToBookAppointment}
-          />
-          ))}
-        </View>
-      </View>
+      )}
     </ScrollView>
   );
 };
@@ -152,7 +176,6 @@ const styles = StyleSheet.create({
   smallText: {
     fontSize: 12,
     color: "#666",
-
   },
   labelText: {
     fontSize: 14,
@@ -265,7 +288,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   locationTextContainer: {
-    
     flex: 1,
   },
   locationName: {
@@ -295,8 +317,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#008B8B",
     fontWeight: "600",
+  }, 
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: "#555",
   },
 });
-
 
 export default VaccineDetail;

@@ -7,6 +7,7 @@ import { images } from "../constants";
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import HttpService from "../constants/HttpService";
+import { useActiveSession } from "../utilities/zustand";
 
 const { width } = Dimensions.get("window");
 
@@ -32,6 +33,7 @@ export default function Onboarding() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
   const router = useRouter();
+  const {activeAccount} = useActiveSession();
 
   useEffect(()=>{
     // const ha = fetchVax();
@@ -45,6 +47,9 @@ export default function Onboarding() {
     // })
     // ;
     // console.log("babi", ha)
+    if(activeAccount){
+      router.replace('/(tabs)/home');
+    }
   },[]);
 
   useEffect(() => {

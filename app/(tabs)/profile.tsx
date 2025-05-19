@@ -24,16 +24,18 @@ const Profile = () => {
 
   const renderCompletedVac = () => (
     <View>
-      <InfoCard
+      {activeUser?.vaccinationHistory.map((hist)=> (<InfoCard
         iconSource={require("../../assets/icons/certif.png")}
-        title= "MMR"
+        title={hist.vaccine.vaccineName}
         subtitle={
           <View style={styles.subtitleRow}>
             <Text style={styles.subtitleText}>Completed in</Text>
-            <Label text="May 10, 2023" variant="teal" />
+            <Label text={dayjs(hist.vaccinationDate).format("DD MMMM YYYY")} variant="teal" />
           </View>
         }
       />
+      ))}
+      
     </View>
   );
 

@@ -1,5 +1,5 @@
 
-import { IUserSessionAction, IUserSessionState } from "../interfaces/zustand/index";
+import { IUserSessionAction, IUserSessionState, IVaccineListAction, IVaccineListState } from "../interfaces/zustand/index";
 import {create} from "zustand";
 
 export const useActiveSession = create<IUserSessionState & IUserSessionAction>()
@@ -14,3 +14,11 @@ export const useActiveSession = create<IUserSessionState & IUserSessionAction>()
         activeUser: activeUser
     })),
 }));
+
+export const useVaccineList = create<IVaccineListState & IVaccineListAction>()
+((set)=>({
+    vaccineList: [],
+    setVaccineList: (vaccineList) => set(()=>({
+        vaccineList: vaccineList
+    }))
+}))

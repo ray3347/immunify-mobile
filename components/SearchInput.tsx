@@ -1,13 +1,14 @@
 import React from 'react';
-import { View, TextInput, StyleSheet, Image } from 'react-native';
+import { View, TextInput, StyleSheet, Image, NativeSyntheticEvent, TextInputFocusEventData } from 'react-native';
 
 interface SearchInputProps {
   placeholder: string;
   value?: string;
   onChangeText?: (text: string) => void;
+  onBlur?: (e: NativeSyntheticEvent<TextInputFocusEventData>) => void;
 }
 
-const SearchInput = ({ placeholder, value, onChangeText }: SearchInputProps) => {
+const SearchInput = ({ placeholder, value, onChangeText, onBlur }: SearchInputProps) => {
   return (
     <View style={styles.container}>
       <Image 
@@ -20,6 +21,7 @@ const SearchInput = ({ placeholder, value, onChangeText }: SearchInputProps) => 
         placeholderTextColor="#9CA3AF"
         value={value}
         onChangeText={onChangeText}
+        onBlur={onBlur}
       />
     </View>
   );

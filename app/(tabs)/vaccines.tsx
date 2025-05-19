@@ -14,6 +14,8 @@ import { useRouter } from "expo-router";
 import SearchInput from "../../components/SearchInput";
 import HttpService from "../../constants/HttpService";
 import { IVaccine } from "../../interfaces/db/IVaccine";
+import { useVaccineList } from "../../utilities/zustand";
+import { IApiResult } from "../../interfaces/api";
 
 // Define the types for your data structures
 // type RelatedDisease = {
@@ -79,7 +81,8 @@ import { IVaccine } from "../../interfaces/db/IVaccine";
 
 const Vaccines = () => {
   const router = useRouter();
-  const [cardData, setCardData] = useState<IVaccine[]>([]);
+  const {vaccineList, setVaccineList} = useVaccineList();
+  // const [cardData, setCardData] = useState<IVaccine[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -88,13 +91,18 @@ const Vaccines = () => {
       try {
         setLoading(true);
         const res = await HttpService.get<{ data: IVaccine[] }>("/wiki/vaccine");
-        setCardData(res.data.data);
-
-        console.log(res.data.data)
+        
+        HttpService.get("/wiki/vaccine")
+        .then((res: IApiResult)=>{
+          setVaccineList(res.data.data)
+          setLoading(false);
+        })
+        // setCardData(res.data.data);
+        
       } catch (error) {
         console.error("Failed to fetch vaccine data", error);
         // Use fallback data when API fails
-        setCardData([]);
+        
         Alert.alert(
           "Connection Error",
           "Could not connect to server. Showing sample data instead.",
@@ -105,7 +113,10 @@ const Vaccines = () => {
       }
     };
 
-    fetchVaccines();
+    if(vaccineList.length == 0){
+
+      fetchVaccines();
+    }
   }, []);
 
   const handleVaccinePress = (vaccine: IVaccine) => {
@@ -116,8 +127,8 @@ const Vaccines = () => {
     });
   };
 
-  const filteredVaccines = searchQuery !== "" && cardData.filter(vaccine =>
-    vaccine.vaccineName.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredVaccines =  vaccineList.filter(vaccine =>
+    searchQuery !== "" ? vaccine.vaccineName.toLowerCase().includes(searchQuery.toLowerCase()) : vaccine
   );
 
   const renderHeader = () => (
@@ -146,7 +157,7 @@ const Vaccines = () => {
           </View>
         ) : (
           <FlatList
-            data={cardData}
+            data={filteredVaccines}
             keyExtractor={(item) => item.id}
             numColumns={2}
             columnWrapperStyle={styles.row}
