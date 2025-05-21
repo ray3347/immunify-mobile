@@ -1,5 +1,5 @@
 // VaccineTracker.tsx
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -18,6 +18,7 @@ import { Dropdown } from "react-native-element-dropdown";
 import Label from "../../components/Label";
 import Icon from "react-native-vector-icons/Ionicons";
 import PrimaryButton from "../../components/PrimaryButton";
+import dayjs from "dayjs";
 
 interface VaccineRecord {
   id: string;
@@ -46,6 +47,10 @@ const Tracker = () => {
   const [addRecordVisible, setAddRecordVisible] = useState(false);
 
   const [expandedRecordId, setExpandedRecordId] = useState<string | null>(null);
+
+  useEffect(()=>{
+    setSelectedDate(dayjs(new Date()).format("DD MMMM YYYY"))
+  },[]);
 
   const toggleRecord = (id: string) => {
     if (expandedRecordId === id) {
@@ -221,7 +226,7 @@ const Tracker = () => {
           {/* Records List */}
           <View style={styles.recordsContainer}>
             <Text style={styles.recordsTitle}>
-              {selectedDate ? `Records for ${selectedDate}` : "All Records"}
+              {selectedDate ? `Records for ${dayjs(selectedDate).format("DD MMMM YYYY")}` : "All Records"}
             </Text>
 
             <FlatList

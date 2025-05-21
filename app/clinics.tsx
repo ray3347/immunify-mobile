@@ -1,17 +1,17 @@
 import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native'
 import React from 'react'
 
-import ListCard from '../../components/ListCard';
+import ListCard from '../components/ListCard';
 import { GestureHandlerRootView, ScrollView } from 'react-native-gesture-handler';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
-import SearchInput from '../../components/SearchInput';
-const icons = {
-  car: require("../../assets/icons/car.png"),
-  star: require("../../assets/icons/star.png"),
-  location: require("../../assets/icons/location-marker.png"),
-}
+import SearchInput from '../components/SearchInput';
+// const icons = {
+//   car: require("../../assets/icons/car.png"),
+//   star: require("../../assets/icons/star.png"),
+//   location: require("../../assets/icons/location-marker.png"),
+// }
 
 
 const Clinics = () => {
@@ -26,20 +26,20 @@ const Clinics = () => {
         <SearchInput 
         placeholder="Find Nearby Clinics" 
       />
-        <ListCard
-          imageSource={require('../../assets/images/image 2.png')}
+        {/* <ListCard
+          imageSource={ur}
           title="RS EMC Pulomas"
           subtitle="Jl. Pulo Mas Bar. VI No.20, Kec. Pulo Gadung.."
           distance="1.2 km"
           rating="4.9"
           onPress={handleNextClinic}
-        />
+        /> */}
 
         <TouchableOpacity>
           <Text style={styles.title}>Hepatitits B Vaccine</Text>
           <Text style={styles.subtitle}>Protection against Hepatitis B virus</Text>
           <View style={styles.rowItem}>
-             <Image source={icons.car} style={styles.icon} />
+             {/* <Image source={icons.car} style={styles.icon} /> */}
             <Text>RS EMC Pluit (1km away)</Text>
           </View>
         </TouchableOpacity>

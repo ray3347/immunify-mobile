@@ -9,24 +9,34 @@ import FormField from "../../components/FormField";
 import { TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import PrimaryButton from "../../components/PrimaryButton";
+import { useActiveSession } from "../../utilities/zustand";
+import HttpService from "../../constants/HttpService";
+import { IApiResult } from "../../interfaces/api";
+import { IUserAccount } from "../../interfaces/db/IAccount";
 const SignUp = () => {
+  const { activeAccount, switchAccount } = useActiveSession();
   const [testConfig, setTestConfig] = useState<any[]>([]);
 
-  useEffect(()=>{
-  },[]);
+  useEffect(() => {}, []);
+
+  useEffect(() => {
+    if (activeAccount) {
+      router.push("/(auth)/log_in");
+    }
+  }, [activeAccount]);
 
   const router = useRouter();
   const [form, setForm] = useState({
-    email: '',
-    password: '',
-    confirmPassword:''
-  })
-  
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+
   const [errors, setErrors] = useState({
-    email: '',
-    password: '',
-    confirmPassword:''
-  })
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
 
   const handleChange = (field: string, value: string) => {
     setForm((prevForm) => ({
@@ -37,12 +47,10 @@ const SignUp = () => {
 
   const handleSubmit = () => {
     const newErrors = {
-      email: '',
-      password: '',
-    confirmPassword:''
-    }
-    
-   
+      email: "",
+      password: "",
+      confirmPassword: "",
+    };
 
     if (!form.email) {
       newErrors.email = "Email is required";
@@ -55,16 +63,23 @@ const SignUp = () => {
     } else if (form.password.length < 6) {
       newErrors.password = "Password must be at least 6 characters";
     }
-    
+
     if (!form.confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password';
+      newErrors.confirmPassword = "Please confirm your password";
     } else if (form.password !== form.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = "Passwords do not match";
     }
-    setErrors(newErrors)
-    
+    setErrors(newErrors);
+
     if (!newErrors.email && !newErrors.password && !newErrors.confirmPassword) {
-      router.push('/(tabs)/home')
+      HttpService.post("/user/register").then((res: IApiResult) => {
+        const user = res.data.data as IUserAccount;
+        // switchAccount(user);
+
+
+      })
+      ;
+      router.push("/(tabs)/home");
     }
   };
 
@@ -77,7 +92,16 @@ const SignUp = () => {
       <SafeAreaView style={{ flex: 1, backgroundColor: "#ffffff" }}>
         <ScrollView>
           <View style={{ paddingHorizontal: 20, paddingVertical: 20 }}>
-            <Text style={{ fontSize: 24, fontFamily: 'pbold', color: '#333333', marginBottom: 20 }}>Create Account</Text>
+            <Text
+              style={{
+                fontSize: 24,
+                fontFamily: "pbold",
+                color: "#333333",
+                marginBottom: 20,
+              }}
+            >
+              Create Account
+            </Text>
             <FormField
               label="Email"
               value={form.email}
@@ -98,13 +122,12 @@ const SignUp = () => {
             <FormField
               label="Confirm Password"
               value={form.confirmPassword}
-              onChangeText={(text) => handleChange('confirmPassword', text)}
+              onChangeText={(text) => handleChange("confirmPassword", text)}
               placeholder="Confirm your password"
               secureTextEntry={true}
               error={errors.confirmPassword}
             />
 
-            
             <PrimaryButton
               title="Sign up"
               onPress={handleSubmit}
@@ -127,7 +150,7 @@ const SignUp = () => {
                 </Text>
               </TouchableOpacity>
             </View>
-            {testConfig.map((vax)=>(
+            {testConfig.map((vax) => (
               <View key={vax.vaccineName}>
                 <Text>{vax.vaccineName}</Text>
                 <Text>{vax.vaccineInformation}</Text>

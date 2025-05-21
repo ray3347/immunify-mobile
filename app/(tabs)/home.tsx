@@ -86,7 +86,7 @@ const Home = () => {
 const UpcomingVaccineSection = () => (
   <View style={styles.sectionSpacing}>
     <Text style={styles.sectionTitle}>Upcoming Vaccine</Text>
-    <Text style={styles.sectionSubtitle}>lorem ipsum dolor sit amet</Text>
+    <Text style={styles.sectionSubtitle}>Here are your next appointments</Text>
     <InfoCard
       iconSource={require("../../assets/icons/injection_fill.png")}
       title="HPV"

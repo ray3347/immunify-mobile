@@ -83,7 +83,7 @@ const SetAppointment = () => {
     <View style={styles.mainContainer}>
       <ScrollView style={styles.container}>
         {/* Guardian Information Section */}
-        <View style={styles.section}>
+        {/* <View style={styles.section}>
           <Text style={styles.sectionTitle}>Guardian Information</Text>
           
           <View style={styles.infoContainer}>
@@ -100,7 +100,7 @@ const SetAppointment = () => {
             <Text style={styles.infoLabel}>Email</Text>
             <Text style={styles.infoValue}>sarah.anderson@email.com</Text>
           </View>
-        </View>
+        </View> */}
         
         {/* Profile Selection Section */}
         <View style={styles.section}>
