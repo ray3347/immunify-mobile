@@ -1,28 +1,39 @@
 import React, { useState } from "react";
 import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
-// import { SafeAreaView } from "react-native-safe-area-context";
-import {
-  GestureHandlerRootView,
-  // ScrollView,
-} from "react-native-gesture-handler";
 import { useRouter } from "expo-router";
-
-import Divider from "../../components/Divider";
 import BigCard from "../../components/BigCard";
 import Label from "../../components/Label";
 import InfoCard from "../../components/InfoCard";
 import CardNoBorder from "../../components/CardNoBorder";
 import TextButton from "../../components/TextButton";
-import ProfileSelectionModal from "../../components/ProfileSelectionModal"; // Updated import
+import ProfileSelectionModal from "../../components/ProfileSelectionModal";
+import AddProfileModal from "../../components/AddProfileModal";
 
-const Home = () => {
-  const [modalVisible, setModalVisible] = useState(false);
+// Define TypeScript interfaces
+interface Profile {
+  id: string;
+  name: string;
+  gender: string;
+  dateOfBirth: Date | null;
+}
 
-  const handleSaveProfile = (profile: any) => {
-    console.log("Profile saved:", profile);
-    setModalVisible(false);
-  };
+interface ProfileData {
+  name: string;
+  gender: string;
+  dateOfBirth: Date | null;
+}
 
+interface ClinicProps {
+  onPress: () => void;
+  onViewAll: () => void;
+}
+
+interface ArticleProps {
+  onPress: () => void;
+  onViewDetail: () => void;
+}
+
+const Home: React.FC = () => {
   const router = useRouter();
 
   const handleNextClinic = () => router.push("../clinic_detail");
@@ -30,19 +41,34 @@ const Home = () => {
   const handleNextArticle = () => router.push("../clinic_detail");
   const viewArticlePage = () => router.push("../article_detail");
 
+  const [profileSelectionVisible, setProfileSelectionVisible] = useState(false);
+  const [addProfileVisible, setAddProfileVisible] = useState(false);
+  const [expandedModal, setExpandedModal] = useState<string | null>(null);
+  const [profiles, setProfiles] = useState<Profile[]>([
+    { id: "1", name: "Jane Doe", gender: "female", dateOfBirth: new Date(1990, 0, 1) }
+  ]);
+  const [selectedProfile, setSelectedProfile] = useState<Profile | null>(profiles[0]);
+
+  const handleAddNewProfile = (profileData: ProfileData) => {
+    const newProfile: Profile = {
+      id: Date.now().toString(),
+      ...profileData
+    };
+    setProfiles([...profiles, newProfile]);
+  };
+  
   return (
     <>
       <ScrollView style={styles.scrollContainer}>
         <View style={styles.container}>
           <View style={styles.stickyHeader}>
-            {/* Move GreetingSection inside Home so it can use setModalVisible */}
             <View>
               <Text style={styles.greetingText}>Hello,</Text>
               <TouchableOpacity
                 style={styles.nameRow}
-                // onPress={() => setModalVisible(true)} 
+                onPress={() => setProfileSelectionVisible(true)}
               >
-                <Text style={styles.nameText}>Jane Doe</Text>
+                <Text style={styles.nameText}>{selectedProfile?.name || "Select Profile"}</Text>
                 <Image
                   source={require("../../assets/icons/chevron_down.png")}
                   style={styles.chevronIcon}
@@ -64,11 +90,33 @@ const Home = () => {
           </ScrollView>
         </View>
       </ScrollView>
+
+      <ProfileSelectionModal
+        visible={profileSelectionVisible}
+        onClose={() => setProfileSelectionVisible(false)}
+        profiles={profiles}
+        selectedProfile={selectedProfile}
+        onSelectProfile={(profile: Profile) => {
+          setSelectedProfile(profile);
+          setProfileSelectionVisible(false);
+        }}
+        onAddNewProfile={() => {
+          setProfileSelectionVisible(false);
+          setAddProfileVisible(true);
+        }}
+      />
+      
+      {/* Add Profile Modal */}
+      <AddProfileModal
+        visible={addProfileVisible}
+        onClose={() => setAddProfileVisible(false)}
+        onSave={handleAddNewProfile}
+      />
     </>
   );
 };
 
-const UpcomingVaccineSection = () => (
+const UpcomingVaccineSection: React.FC = () => (
   <View style={styles.sectionSpacing}>
     <Text style={styles.sectionTitle}>Upcoming Vaccine</Text>
     <Text style={styles.sectionSubtitle}>lorem ipsum dolor sit amet</Text>
@@ -109,12 +157,9 @@ const clinicData = [
   },
 ];
 
-const ClinicsNearbySection = ({
+const ClinicsNearbySection: React.FC<ClinicProps> = ({
   onPress,
   onViewAll,
-}: {
-  onPress: () => void;
-  onViewAll: () => void;
 }) => (
   <View style={styles.sectionSpacing}>
     <View style={styles.headerRow}>
@@ -163,12 +208,12 @@ const vaccineArticles = [
   {
     title: "Flu Vaccine Myths Busted",
     subtitle:
-      "Don’t let common misconceptions keep you from staying protected.",
+      "Don't let common misconceptions keep you from staying protected.",
     image: require("../../assets/images/article3.png"),
   },
 ];
 
-const ArticlesSection = ({ onPress, onViewDetail }: { onPress: () => void; onViewDetail: () => void }) => {
+const ArticlesSection: React.FC<ArticleProps> = ({ onPress, onViewDetail }) => {
   return (
     <View style={styles.sectionSpacing}>
       <View style={styles.headerRow}>
@@ -267,7 +312,6 @@ const styles = StyleSheet.create({
     paddingRight: 0,
   },
   stickyHeader: {
-    // paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 10,
     backgroundColor: "#ffffff",

@@ -287,7 +287,6 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
 
-  // --- Card style ---
   card: {
     backgroundColor: "#fff",
     borderRadius: 8,
@@ -316,7 +315,6 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
   },
 
-  // --- Day selection ---
   dayButton: {
     paddingVertical: 12,
     borderRadius: 8,
@@ -352,7 +350,6 @@ const styles = StyleSheet.create({
     borderColor: "#008B8B",
   },
 
-  // --- Detail items ---
   detailItem: {
     flexDirection: "row",
     alignItems: "flex-start",

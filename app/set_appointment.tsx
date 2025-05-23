@@ -1,6 +1,7 @@
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Modal, Alert, Dimensions } from "react-native";
 import React, { useState, useRef } from "react";
 import { Feather } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 
 interface Profile {
   id: string;
@@ -10,7 +11,9 @@ interface Profile {
   selected: boolean;
 }
 
+
 const SetAppointment = () => {
+  const router = useRouter();
   const [modalVisible, setModalVisible] = useState(false);
   const [newName, setNewName] = useState('');
   const [newAge, setNewAge] = useState('');
@@ -41,8 +44,13 @@ const SetAppointment = () => {
     setModalVisible(false);
   };
 
+
+  const goToConfirmationPage = () =>{
+    router.push("../set_appointment")
+  };
+
+  
   const handleAddProfile = () => {
-    // Validate required fields
     if (!newName.trim()) {
       Alert.alert('Required Field', 'Please enter a full name');
       return;
@@ -58,7 +66,6 @@ const SetAppointment = () => {
       return;
     }
     
-    // Add new profile
     const newProfile: Profile = {
       id: Date.now().toString(),
       name: newName,
@@ -82,7 +89,7 @@ const SetAppointment = () => {
   return (
     <View style={styles.mainContainer}>
       <ScrollView style={styles.container}>
-        {/* Guardian Information Section */}
+        {/* Guardian Information Section
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Guardian Information</Text>
           
@@ -101,7 +108,7 @@ const SetAppointment = () => {
             <Text style={styles.infoValue}>sarah.anderson@email.com</Text>
           </View>
         </View>
-        
+         */}
         {/* Profile Selection Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Select Profiles to Book</Text>
@@ -149,6 +156,7 @@ const SetAppointment = () => {
             getSelectedCount() === 0 && styles.disabledButton
           ]}
           disabled={getSelectedCount() === 0}
+          onPress={goToConfirmationPage}
         >
           <Text style={styles.confirmButtonText}>Confirm Booking</Text>
         </TouchableOpacity>
