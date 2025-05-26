@@ -3,21 +3,16 @@
   "compilerOptions": {
     "jsx": "react",
     "strict": true,
-    "paths": {
-      "@/*": [
-        "./*"
-      ]
-    },
     "moduleResolution": "node",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "strict": true,
     "allowJs": true,
     "baseUrl": ".",
     "paths": {
-      "*": ["src/@types/*"]
+      "@/*": ["./src/*"]
     },
-    "typeRoots": ["./node_modules/@types", "./src/@types"]
+    "typeRoots": ["./node_modules/@types", "./src/@types"],
+    "types": ["react"]
   },
   "include": [
     "src/**/*",
