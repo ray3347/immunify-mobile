@@ -1,7 +1,6 @@
 {
   "expo": {
     "name": "immunify",
-    "slug": "immunify",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icons/splash-icon.png",
@@ -13,7 +12,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/icons/splash-icon.png",
+        "foregroundImage": "./assets/icons/adaptive-icon.png",
         "backgroundColor": "#008B8B"
       },
       "package": "com.anonymous.immunify"
