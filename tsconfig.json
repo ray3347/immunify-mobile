@@ -3,29 +3,31 @@
   "compilerOptions": {
     "jsx": "react",
     "strict": true,
-    "paths": {
-      "@/*": [
-        "./*"
-      ]
-    },
     "moduleResolution": "node",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "strict": true,
     "allowJs": true,
     "baseUrl": ".",
     "paths": {
-      "*": ["src/@types/*"]
+      "@/*": [
+        "./src/*"
+      ]
     },
-    "typeRoots": ["./node_modules/@types", "./src/@types"]
+    "typeRoots": [
+      "./node_modules/@types",
+      "./src/@types"
+    ],
+    "types": [
+      "react"
+    ]
   },
   "include": [
     "src/**/*",
     "**/*.ts",
     "**/*.tsx",
-    ".expo/types/**/*.ts",
-    "expo-env.d.ts",
     "tailwind.config.js",
-    "src/@types/**/*.d.ts"
+    "src/@types/**/*.d.ts",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts"
   ]
 }

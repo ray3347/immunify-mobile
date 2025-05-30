@@ -11,6 +11,10 @@ import InfoCard from "../../components/InfoCard";
 import Label from "../../components/Label";
 import { useActiveSession } from "../../utilities/zustand";
 import dayjs from "dayjs";
+import { useRouter } from 'expo-router';
+import SettingsModal from '../../components/SettingsModal';
+import LogoutConfirmationModal from '../../components/LogoutConfirmationModal';
+import ProfileBottomSheet from "../../components/ProfileBottomSheet"; 
 
 const icons = {
   cake: require("../../assets/icons/cake.png"),
@@ -19,21 +23,75 @@ const icons = {
 
 };
 const Profile = () => {
-  const {activeUser} = useActiveSession();
+  const {activeUser, setActiveUser, setActiveAccount} = useActiveSession();
   const [activeTab, setActiveTab] = useState("completed vaccination");
+  const router = useRouter();
+  const [showSettings, setShowSettings] = useState(false);
+  const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
+  const [showProfileSheet, setShowProfileSheet] = useState(false);
+  const [profiles, setProfiles] = useState([
+    {
+      id: "1",
+      name: "John Doe",
+      color: "#5B9BD5",
+      selected: true,
+      gender: "male",
+      dateOfBirth: "1990-01-01",
+    },
+    {
+      id: "2",
+      name: "Jane Smith",
+      color: "#F08A9B",
+      selected: false,
+      gender: "female",
+      dateOfBirth: "1992-05-15",
+    },
+  ]);
+
+  const handleProfileToggle = (profileId: string) => {
+    setProfiles((prev) =>
+      prev.map((p) => ({
+        ...p,
+        selected: p.id === profileId,
+      }))
+    );
+    setShowProfileSheet(false);
+  };
+
+  const handleAddNewProfile = () => {
+    setShowProfileSheet(false);
+  };
+
+  const handleLogout = () => {
+    setShowSettings(false);
+    setShowLogoutConfirmation(true);
+  };
+
+  const handleConfirmLogout = () => {
+    setActiveUser(null);
+    setActiveAccount(null);
+    router.replace('/(auth)/log_in'); 
+  };
+
+  const handleEditProfile = () => {
+    setShowSettings(false);
+    router.push('/edit_profile');
+  };
 
   const renderCompletedVac = () => (
     <View>
-      {activeUser?.vaccinationHistory.map((hist)=> (<InfoCard
-        iconSource={require("../../assets/icons/certif.png")}
-        title={hist.vaccine.vaccineName}
-        subtitle={
-          <View style={styles.subtitleRow}>
-            <Text style={styles.subtitleText}>Completed in</Text>
-            <Label text={dayjs(hist.vaccinationDate).format("DD MMMM YYYY")} variant="teal" />
-          </View>
-        }
-      />
+      {activeUser?.vaccinationHistory.map((hist) => (
+        <InfoCard
+          key={hist.id}  
+          iconSource={require("../../assets/icons/certif.png")}
+          title={hist.vaccine.vaccineName}
+          subtitle={
+            <View style={styles.subtitleRow}>
+              <Text style={styles.subtitleText}>Completed in</Text>
+              <Label text={dayjs(hist.vaccinationDate).format("DD MMMM YYYY")} variant="teal" />
+            </View>
+          }
+        />
       ))}
       
     </View>
@@ -59,25 +117,33 @@ const Profile = () => {
       <SafeAreaView style={styles.container}>
         <View style={styles.stickyHeader}>
           <Text style={styles.headerText}>Profile</Text>
-          <Image
-            source={require("../../assets/icons/settings.png")}
-            style={styles.icon}
-          />
+          <TouchableOpacity onPress={() => setShowSettings(true)}>
+            <Image
+              source={require("../../assets/icons/settings.png")}
+              style={styles.icon}
+            />
+          </TouchableOpacity>
         </View>
 
         <View style={styles.contentWrapper}>
           <View style={styles.rowItem}>
             <View style={styles.mb16}>
-              <ProfilePic name={activeUser?.fullName ?? "Jane Doe"} size={64} />
+              <ProfilePic name={activeUser?.fullName ?? ""} size={64} />
             </View>
 
             <View>
               <View style={styles.nameRow}>
-                <Text style={styles.title}>{activeUser?.fullName}</Text>
-                <Image
-                  source={require("../../assets/icons/chevron_down.png")}
-                  style={styles.chevronIcon}
-                />
+                <TouchableOpacity
+                  style={{ flexDirection: "row", alignItems: "center" }}
+                  onPress={() => setShowProfileSheet(true)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.title}>{activeUser?.fullName}</Text>
+                  <Image
+                    source={require("../../assets/icons/chevron_down.png")}
+                    style={styles.chevronIcon}
+                  />
+                </TouchableOpacity>
               </View>
               <View style={styles.statsRow}>
                 <View style={styles.rowItem}>
@@ -109,6 +175,28 @@ const Profile = () => {
               : renderRecommendedVac()}
           </ScrollView>
         </View>
+
+        <SettingsModal
+          isVisible={showSettings}
+          onClose={() => setShowSettings(false)}
+          onEditProfile={handleEditProfile}
+          onLogout={handleLogout}
+        />
+
+        <LogoutConfirmationModal
+          isVisible={showLogoutConfirmation}
+          onClose={() => setShowLogoutConfirmation(false)}
+          onConfirm={handleConfirmLogout}
+        />
+
+        {/* Profile Bottom Sheet */}
+        <ProfileBottomSheet
+          isVisible={showProfileSheet}
+          onClose={() => setShowProfileSheet(false)}
+          profiles={profiles}
+          onProfileToggle={handleProfileToggle}
+          onAddNewProfile={handleAddNewProfile}
+        />
       </SafeAreaView>
     </GestureHandlerRootView>
   );

@@ -141,7 +141,15 @@ const VaccineDetail = () => {
                 onPress={goToBookAppointment}
               />
             ))}
+            {/* Tambahkan tombol Book Appointment di bawah daftar lokasi */}
+            <TouchableOpacity
+              // style={styles.bookButton}
+              onPress={goToBookAppointment}
+            >
+              <Text >Book Appointment</Text>
+            </TouchableOpacity>
           </View>
+          
         </View>
       )}
     </ScrollView>

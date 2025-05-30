@@ -20,26 +20,52 @@ import Label from "../../components/Label";
 import InfoCard from "../../components/InfoCard";
 import CardNoBorder from "../../components/CardNoBorder";
 import TextButton from "../../components/TextButton";
-import ProfileSelectionModal from "../../components/ProfileSelectionModal"; // Updated import
+import ProfileBottomSheet from "../../components/ProfileBottomSheet"; 
 import { useActiveSession } from "../../utilities/zustand";
 
 const Home = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const {activeAccount, activeUser} = useActiveSession();
 
+  const [profiles, setProfiles] = useState([
+    {
+      id: "1",
+      name: "John Doe",
+      color: "#5B9BD5",
+      selected: true,
+      gender: "male",
+      dateOfBirth: "1990-01-01",
+    },
+    {
+      id: "2",
+      name: "Jane Smith",
+      color: "#F08A9B",
+      selected: false,
+      gender: "female",
+      dateOfBirth: "1992-05-15",
+    },
+  ]);
+
+  // Handler untuk memilih profile
+  const handleProfileToggle = (profileId: string) => {
+    setProfiles((prev) =>
+      prev.map((p) => ({
+        ...p,
+        selected: p.id === profileId,
+      }))
+    );
+    setModalVisible(false);
+  };
+
+  const handleAddNewProfile = () => {
+    setModalVisible(false);
+  };
+
   useEffect(()=>{
     console.log(activeUser);
   },[])
 
-  const handleSaveProfile = (profile: any) => {
-    console.log("Profile saved:", profile);
-    setModalVisible(false);
-  };
-
   const router = useRouter();
-
-  const handleNextClinic = () => router.push("../clinic_detail");
-  const viewAllClinic = () => router.push("/(tabs)/vaccines");
   const handleNextArticle = () => router.push("../clinic_detail");
   const viewArticlePage = () => router.push("../article_detail");
 
@@ -48,16 +74,15 @@ const Home = () => {
       <ScrollView style={styles.scrollContainer}>
         <View style={styles.container}>
           <View style={styles.stickyHeader}>
-            {/* Move GreetingSection inside Home so it can use setModalVisible */}
             <View>
               <Text style={styles.greetingText}>Hello,</Text>
               <TouchableOpacity
                 style={styles.nameRow}
-                // onPress={() => setModalVisible(true)}
+                onPress={() => setModalVisible(true)} 
               >
                 <Text style={styles.nameText}>
-                    {activeUser?.fullName}
-                  </Text>
+                  {activeUser?.fullName}
+                </Text>
                 <Image
                   source={require("../../assets/icons/chevron_down.png")}
                   style={styles.chevronIcon}
@@ -68,10 +93,6 @@ const Home = () => {
 
           <ScrollView showsVerticalScrollIndicator={false}>
             <UpcomingVaccineSection />
-            {/* <ClinicsNearbySection
-              onPress={handleNextClinic}
-              onViewAll={viewAllClinic}
-            /> */}
             <ArticlesSection
               onPress={handleNextArticle}
               onViewDetail={viewArticlePage}
@@ -79,6 +100,15 @@ const Home = () => {
           </ScrollView>
         </View>
       </ScrollView>
+
+      {/* Profile Bottom Sheet */}
+      <ProfileBottomSheet
+        isVisible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        profiles={profiles}
+        onProfileToggle={handleProfileToggle}
+        onAddNewProfile={handleAddNewProfile}
+      />
     </>
   );
 };
@@ -100,67 +130,6 @@ const UpcomingVaccineSection = () => (
   </View>
 );
 
-const clinicData = [
-  {
-    title: "Example Clinic 1",
-    address: "123 Main St, City, Country",
-    distance: "1.2 km",
-    rating: "4.9",
-    imageSource: require("../../assets/images/image 1.png"),
-  },
-  {
-    title: "Example Clinic 2",
-    address: "123 Main St, City, Country",
-    distance: "2.5 km",
-    rating: "4.7",
-    imageSource: require("../../assets/images/image 2.png"),
-  },
-  {
-    title: "Example Clinic 3",
-    address: "456 Elm St, City, Country",
-    distance: "3.1 km",
-    rating: "4.6",
-    imageSource: require("../../assets/images/image 3.png"),
-  },
-];
-
-const ClinicsNearbySection = ({
-  onPress,
-  onViewAll,
-}: {
-  onPress: () => void;
-  onViewAll: () => void;
-}) => (
-  <View style={styles.sectionSpacing}>
-    <View style={styles.headerRow}>
-      <View>
-        <Text style={styles.sectionTitle}>Clinics Nearby</Text>
-        <Text style={[styles.sectionSubtitle, styles.mb16]}>
-          Find the closest clinic to your location
-        </Text>
-      </View>
-      <TextButton text="View All" onPress={onViewAll} />
-    </View>
-
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={styles.clinicsScrollContent}
-    >
-      {clinicData.map((clinic, index) => (
-        <BigCard
-          key={index}
-          onPress={onPress}
-          title={clinic.title}
-          address={clinic.address}
-          distance={clinic.distance}
-          rating={clinic.rating}
-          imageSource={clinic.imageSource}
-        />
-      ))}
-    </ScrollView>
-  </View>
-);
 
 const vaccineArticles = [
   {
@@ -233,7 +202,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   container: {
-    marginTop: 56,
+    marginTop: 30,
     paddingHorizontal: 16,
   },
   innerContainer: {
@@ -305,3 +274,5 @@ const styles = StyleSheet.create({
 });
 
 export default Home;
+
+export const options = { headerShown: false };

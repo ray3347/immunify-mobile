@@ -6,7 +6,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { images } from "../constants";
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import HttpService from "../constants/HttpService";
+// import HttpService from "../constants/HttpService";
 import { useActiveSession } from "../utilities/zustand";
 
 const { width } = Dimensions.get("window");

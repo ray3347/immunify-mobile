@@ -7,7 +7,6 @@ import * as SplashScreen from "expo-splash-screen";
 import "react-native-reanimated";
 import React from 'react';
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 const fontMap = {
@@ -59,6 +58,7 @@ export default function RootLayout() {
     <Stack>
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen
         name="set_appointment"
         options={{
@@ -83,16 +83,20 @@ export default function RootLayout() {
           headerLeft: () => <BackButton />,
         }}
       />
-      
       <Stack.Screen
-        name="vaccine_detail"
+        name="booking_summary"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="detail_records"
         options={{
           headerShown: true,
-          title: "Vaccine Details",
+          title: "Detail Record",
           headerLeft: () => <BackButton />,
         }}
       />
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
     </Stack>
   );
 }

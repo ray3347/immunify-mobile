@@ -28,12 +28,10 @@
       "backgroundColor": "#008B8B"
     },
     "plugins": [
-      "expo-router",
       [
         "expo-splash-screen",
         {
           "image": "./assets/icons/splash-icon.png",
-          "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#008B8B"
         }
