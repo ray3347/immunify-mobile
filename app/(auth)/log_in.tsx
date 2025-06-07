@@ -15,6 +15,7 @@ import { IApiResult } from "../../interfaces/api";
 import { useActiveSession } from "../../utilities/zustand";
 import { IUserAccount } from "../../interfaces/db/IAccount";
 import { useNavigation } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Login = () => {
   const router = useRouter();
@@ -25,7 +26,6 @@ const Login = () => {
   const [errors, setErrors] = useState({ email: "", password: "" });
 
   useEffect(()=>{
-    // console.log(activeAccount)
     if(activeAccount){
       router.push("/(tabs)/home");
     }
@@ -62,18 +62,12 @@ const Login = () => {
           hashedPassword: MD5(form.password).toString(),
         },
       };
-      HttpService.post("/user/login", requestBody).then((res: IApiResult) => {
-        const user = res.data.data as IUserAccount;
+      HttpService.post("/user/login", requestBody).then(async (res: IApiResult<IUserAccount>) => {
+        const user = res.data.data;
+        await AsyncStorage.setItem('accountId', user.id);
         switchAccount(user);
-        console.log(activeAccount);
-        // setTimeout(() => {
-        //   router.push("/(tabs)/home");
-        // }, 0);
+        // console.log(activeAccount);
       });
-      // .then(()=>{
-
-      //   router.push("/(tabs)/home");
-      // })
     }
   };
 

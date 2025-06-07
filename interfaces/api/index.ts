@@ -1,5 +1,5 @@
-export interface IApiResult{
+export interface IApiResult<T>{
     data: {
-        data:any;
+        data:T;
     };
 }

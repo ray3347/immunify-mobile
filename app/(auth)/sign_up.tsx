@@ -13,6 +13,8 @@ import { useActiveSession } from "../../utilities/zustand";
 import HttpService from "../../constants/HttpService";
 import { IApiResult } from "../../interfaces/api";
 import { IUserAccount } from "../../interfaces/db/IAccount";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import MD5 from "crypto-js/md5";
 const SignUp = () => {
   const { activeAccount, switchAccount } = useActiveSession();
   const [testConfig, setTestConfig] = useState<any[]>([]);
@@ -72,13 +74,19 @@ const SignUp = () => {
     setErrors(newErrors);
 
     if (!newErrors.email && !newErrors.password && !newErrors.confirmPassword) {
-      HttpService.post("/user/register").then((res: IApiResult) => {
-        const user = res.data.data as IUserAccount;
-        // switchAccount(user);
-
-
-      })
-      ;
+      const requestBody = {
+        userData: {
+          hashedUsername: form.email,
+          hashedPassword: MD5(form.password).toString(),
+        },
+      };
+      HttpService.post("/user/register", requestBody).then(
+        async (res: IApiResult<IUserAccount>) => {
+          const user = res.data.data;
+          await AsyncStorage.setItem("accountId", user.id);
+          switchAccount(user);
+        }
+      );
       router.push("/(tabs)/home");
     }
   };

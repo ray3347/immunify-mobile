@@ -8,7 +8,11 @@ import "react-native-reanimated";
 import React from 'react';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
+// SplashScreen.preventAutoHideAsync();
+// SplashScreen.setOptions({
+//   duration: 1000,
+//   fade: true,
+// });
 
 const fontMap = {
   "PlusJakartaSans-Regular": require("../assets/fonts/PlusJakartaSans-Regular.ttf"),

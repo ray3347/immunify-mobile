@@ -93,7 +93,7 @@ const Vaccines = () => {
         const res = await HttpService.get<{ data: IVaccine[] }>("/wiki/vaccine");
         
         HttpService.get("/wiki/vaccine")
-        .then((res: IApiResult)=>{
+        .then((res: IApiResult<IVaccine[]>)=>{
           setVaccineList(res.data.data)
           setLoading(false);
         })
