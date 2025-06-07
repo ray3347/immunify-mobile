@@ -43,6 +43,7 @@ const TabsLayout: React.FC = () => {
   return (
     <Tabs
       screenOptions={{
+        headerShown: false, // <-- ini akan menyembunyikan header di semua tab
         tabBarActiveTintColor: "#008B8B",
         tabBarInactiveTintColor: "#C2C2C2",
         tabBarShowLabel: false,

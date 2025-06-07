@@ -7,9 +7,11 @@ export interface IUserSessionState{
     activeUser: IUser | null;
 }
 
-export interface IUserSessionAction{
-    switchAccount: (account: IUserSessionState['activeAccount']) => void;
-    switchUser: (user: IUserSessionState['activeUser']) => void;
+export interface IUserSessionAction {
+  switchAccount: (activeAccount: IUserSessionState["activeAccount"]) => void;
+  switchUser: (activeUser: IUserSessionState["activeUser"]) => void;
+  setActiveAccount: (activeAccount: IUserSessionState["activeAccount"]) => void;
+  setActiveUser: (activeUser: IUserSessionState["activeUser"]) => void;
 }
 
 export interface IVaccineListState{

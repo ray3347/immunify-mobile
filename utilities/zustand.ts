@@ -1,24 +1,29 @@
-
 import { IUserSessionAction, IUserSessionState, IVaccineListAction, IVaccineListState } from "../interfaces/zustand/index";
-import {create} from "zustand";
+import { create } from "zustand";
 
 export const useActiveSession = create<IUserSessionState & IUserSessionAction>()
-((set)=>({
+((set) => ({
     activeAccount: null,
     activeUser: null,
-    switchAccount: (activeAccount) => set(()=> ({
+    switchAccount: (activeAccount: IUserSessionState["activeAccount"]) => set(() => ({
         activeAccount: activeAccount,
         activeUser: activeAccount?.userList[0]
     })),
-    switchUser: (activeUser) => set(()=> ({
+    switchUser: (activeUser: IUserSessionState["activeUser"]) => set(() => ({
+        activeUser: activeUser
+    })),
+    setActiveAccount: (activeAccount: IUserSessionState["activeAccount"]) => set(() => ({
+        activeAccount: activeAccount
+    })),
+    setActiveUser: (activeUser: IUserSessionState["activeUser"]) => set(() => ({
         activeUser: activeUser
     })),
 }));
 
 export const useVaccineList = create<IVaccineListState & IVaccineListAction>()
-((set)=>({
+((set) => ({
     vaccineList: [],
-    setVaccineList: (vaccineList) => set(()=>({
+    setVaccineList: (vaccineList) => set(() => ({
         vaccineList: vaccineList
     }))
 }))

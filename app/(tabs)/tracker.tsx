@@ -15,11 +15,9 @@ import { Calendar, DateData } from "react-native-calendars";
 import { ChevronDown, Plus, X } from "react-native-feather";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Dropdown } from "react-native-element-dropdown";
-import Label from "../../components/Label";
-import Icon from "react-native-vector-icons/Ionicons";
 import PrimaryButton from "../../components/PrimaryButton";
 import dayjs from "dayjs";
-
+import { useRouter } from "expo-router";
 interface VaccineRecord {
   id: string;
   userId: string;
@@ -41,16 +39,16 @@ interface User {
 const Tracker = () => {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [selectedDate, setSelectedDate] = useState<string>("");
+  const [selectedDate, setSelectedDate] = useState<string>(dayjs().format("YYYY-MM-DD"));
   const [monthPickerVisible, setMonthPickerVisible] = useState(false);
 
   const [addRecordVisible, setAddRecordVisible] = useState(false);
 
   const [expandedRecordId, setExpandedRecordId] = useState<string | null>(null);
-
-  useEffect(()=>{
-    setSelectedDate(dayjs(new Date()).format("DD MMMM YYYY"))
-  },[]);
+  const router = useRouter();
+    // useEffect(()=>{
+    //   setSelectedDate(dayjs(new Date()).format("DD MMMM YYYY"))
+    // },[]);
 
   const toggleRecord = (id: string) => {
     if (expandedRecordId === id) {
@@ -90,24 +88,6 @@ const Tracker = () => {
     },
   ]);
 
-  const getMonthYearString = () => {
-    const months = [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
-    ];
-    return `${months[selectedMonth]} ${selectedYear}`;
-  };
-
   const getMarkedDates = () => {
     const marked: any = {};
 
@@ -123,8 +103,43 @@ const Tracker = () => {
       marked[dateString].dots.push({
         key: record.id,
         color: record.userColor,
+        selectedDotColor: record.userColor,
+        dotStyle: {
+          width: 8,
+          height: 8,
+          borderRadius: 4,
+          marginTop: 2,
+        },
       });
     });
+
+    if (selectedDate) {
+      marked[selectedDate] = {
+        ...(marked[selectedDate] || {}),
+        selected: true,
+        selectedColor: "#008B8B", 
+      };
+    }
+
+    const today = dayjs().format("YYYY-MM-DD");
+    if (today !== selectedDate) {
+      marked[today] = {
+        ...(marked[today] || {}),
+        customStyles: {
+          container: {
+            borderWidth: 2,
+            borderColor: "#FF9800",
+            borderRadius: 20,
+            backgroundColor: "#FFF8E1", 
+          },
+          text: {
+            color: "#FF9800",
+            fontWeight: "bold",
+          },
+        },
+        today: true,
+      };
+    }
 
     return marked;
   };
@@ -142,7 +157,7 @@ const Tracker = () => {
   };
 
   const handleMonthChange = (monthData: { year: number; month: number }) => {
-    setSelectedMonth(monthData.month - 1); // Calendar months are 1-indexed
+    setSelectedMonth(monthData.month - 1); 
     setSelectedYear(monthData.year);
   };
   const [newRecord, setNewRecord] = useState<{
@@ -194,6 +209,7 @@ const Tracker = () => {
 
   const [value, setValue] = useState(null);
   const [isFocus, setIsFocus] = useState(false);
+  // const navigation = useNavigation();
 
   return (
     <GestureHandlerRootView>
@@ -212,21 +228,32 @@ const Tracker = () => {
           <Calendar
             current={currentCalendarDate}
             markedDates={getMarkedDates()}
-            markingType={"multi-dot"}
+            markingType="multi-dot" 
             onDayPress={handleDateSelect}
             onMonthChange={handleMonthChange}
+            renderHeader={(date: string) => {
+              const months = [
+                "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"
+              ];
+              const d = new Date(date);
+              return (
+                <Text style={{ fontSize: 18, fontWeight: "bold", color: "#008B8B" }}>
+                  {months[d.getMonth()]} {d.getFullYear()}
+                </Text>
+              );
+            }}
             theme={{
-              selectedDayBackgroundColor: "#008B8B",
-              todayTextColor: "#008B8B",
-              dotColor: "#008B8B",
               arrowColor: "#008B8B",
+              dotColor: "#008B8B", 
+              todayDotColor: "#FF9800",
             }}
           />
 
           {/* Records List */}
           <View style={styles.recordsContainer}>
             <Text style={styles.recordsTitle}>
-              {selectedDate ? `Records for ${dayjs(selectedDate).format("DD MMMM YYYY")}` : "All Records"}
+              {`Records for ${dayjs(selectedDate || dayjs().format("YYYY-MM-DD")).format("DD MMMM YYYY")}`}
             </Text>
 
             <FlatList
@@ -235,42 +262,29 @@ const Tracker = () => {
               renderItem={({ item }) => (
                 <TouchableOpacity
                   style={styles.recordCard}
-                  onPress={() => toggleRecord(item.id)}
+                  onPress={() => router.push("/detail_records")}
                 >
-                  <View style={styles.recordHeader}>
-                    <View>
-                        <View style={styles.userRecordHeader}>
-                            <View
-                                style={[
-                                    styles.userIndicator,
-                                    { backgroundColor: item.userColor },
-                                ]}
-                            />
-                            <Text style={styles.recordTitle}>{item.userName}</Text>
-                        </View>
-                        <Text style={styles.recordUser}>{item.vaccineName}</Text>
-                    </View>
+                  {/* Baris 1: Profile & Nama */}
+                  <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
+                    <View
+                      style={[
+                        styles.userIndicator,
+                        { backgroundColor: item.userColor },
+                      ]}
+                    />
+                    <Text style={styles.recordTitle}>{item.userName}</Text>
                   </View>
-
-                  {expandedRecordId === item.id && (
-                    <View style={styles.recordDetails}>
-                        <View>
-                            <Text style={{color:'#777'}}>Date & Time</Text>
-                            <View>
-                                <Text>{item.time}</Text>
-                                <Text>{item.date}</Text>
-                            </View>
-                        </View>
-                        <View>
-                            <Text style={{color:'#777'}}>Location</Text>
-                            <Text>{item.location}</Text>
-                        </View>
-                        <View>
-                            <Text style={{color:'#777'}}>Dose</Text>
-                            <Text>{item.dose}</Text>
-                        </View>
-                    </View>
-                  )}
+                  {/* Baris 2: Nama Vaksin */}
+                  <Text style={styles.recordUser}>{item.vaccineName}</Text>
+                  {/* Baris 3: Tanggal & waktu, lokasi */}
+                  <View style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}>
+                    <Text style={styles.cardInfoText}>
+                      {dayjs(item.date).format("DD MMM YYYY")} • {item.time}
+                    </Text>
+                    <Text style={[styles.cardInfoText, { color: "#008B8B", marginLeft: 8 }]}>
+                      {item.location}
+                    </Text>
+                  </View>
                 </TouchableOpacity>
               )}
             />
@@ -728,6 +742,30 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 10,
+  },
+  cardRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  cardContent: {
+    marginLeft: 12,
+    flex: 1,
+  },
+  cardInfoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 4,
+    marginBottom: 2,
+  },
+  cardInfoText: {
+    color: "#888",
+    fontSize: 13,
+    marginRight: 8,
+  },
+  cardLocation: {
+    color: "#008B8B",
+    fontSize: 13,
+    marginTop: 2,
   },
 });
 

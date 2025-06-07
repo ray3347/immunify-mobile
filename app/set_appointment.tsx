@@ -1,28 +1,24 @@
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Modal, Alert, Dimensions } from "react-native";
-import React, { useState, useRef } from "react";
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Dimensions } from "react-native";
+import React, { useState } from "react";
 import { Feather } from "@expo/vector-icons";
+import AddProfileForm from "../components/AddProfileForm"; // Pastikan komponen ini sudah ada
+import { useRouter } from "expo-router"; // Tambahkan import ini
 
 interface Profile {
   id: string;
   name: string;
   age: string;
-  relationship: string;
   selected: boolean;
 }
 
 const SetAppointment = () => {
   const [modalVisible, setModalVisible] = useState(false);
-  const [newName, setNewName] = useState('');
-  const [newAge, setNewAge] = useState('');
-  const [newRelationship, setNewRelationship] = useState('');
-  
-  const relationshipOptions = ['Son', 'Daughter', 'Spouse', 'Parent', 'Sibling', 'Friend', 'Other'];
-  
   const [profiles, setProfiles] = useState<Profile[]>([
-    { id: '1', name: 'Tommy Anderson', age: '12', relationship: 'Son', selected: true },
-    { id: '2', name: 'Emma Anderson', age: '8', relationship: 'Daughter', selected: false },
-    { id: '3', name: 'John Anderson', age: '42', relationship: 'Spouse', selected: false }
+    { id: '1', name: 'Tommy Anderson', age: '12', selected: true },
+    { id: '2', name: 'Emma Anderson', age: '8', selected: false },
+    { id: '3', name: 'John Anderson', age: '42', selected: false }
   ]);
+  const router = useRouter(); // Tambahkan ini
 
   const toggleProfileSelection = (id: string) => {
     setProfiles(profiles.map(profile => 
@@ -32,82 +28,42 @@ const SetAppointment = () => {
 
   const openAddProfileModal = () => {
     setModalVisible(true);
-    setNewName('');
-    setNewAge('');
-    setNewRelationship('');
   };
 
   const closeAddProfileModal = () => {
     setModalVisible(false);
   };
 
-  const handleAddProfile = () => {
-    // Validate required fields
-    if (!newName.trim()) {
-      Alert.alert('Required Field', 'Please enter a full name');
-      return;
-    }
-    
-    if (!newAge.trim()) {
-      Alert.alert('Required Field', 'Please enter an age');
-      return;
-    }
-    
-    if (!newRelationship) {
-      Alert.alert('Required Field', 'Please select a relationship');
-      return;
-    }
-    
-    // Add new profile
+  const handleAddProfile = (profile: { name: string; dateOfBirth?: string }) => {
     const newProfile: Profile = {
       id: Date.now().toString(),
-      name: newName,
-      age: newAge,
-      relationship: newRelationship,
-      selected: false
+      name: profile.name,
+      age: profile.dateOfBirth
+        ? (new Date().getFullYear() - Number(profile.dateOfBirth.split('-')[0])).toString()
+        : '',
+      selected: false,
     };
-    
     setProfiles([...profiles, newProfile]);
-    closeAddProfileModal();
-  };
-
-  const selectRelationship = (relationship: string) => {
-    setNewRelationship(relationship);
+    setModalVisible(false);
   };
 
   const getSelectedCount = () => {
     return profiles.filter(profile => profile.selected).length;
   };
 
+  const handleConfirmBooking = () => {
+    router.replace("/booking_summary");
+  };
+
   return (
     <View style={styles.mainContainer}>
       <ScrollView style={styles.container}>
-        {/* Guardian Information Section */}
-        {/* <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Guardian Information</Text>
-          
-          <View style={styles.infoContainer}>
-            <Text style={styles.infoLabel}>Full Name</Text>
-            <Text style={styles.infoValue}>Sarah Anderson</Text>
-          </View>
-          
-          <View style={styles.infoContainer}>
-            <Text style={styles.infoLabel}>Phone Number</Text>
-            <Text style={styles.infoValue}>+1 (555) 123-4567</Text>
-          </View>
-          
-          <View style={styles.infoContainer}>
-            <Text style={styles.infoLabel}>Email</Text>
-            <Text style={styles.infoValue}>sarah.anderson@email.com</Text>
-          </View>
-        </View> */}
-        
         {/* Profile Selection Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Select Profiles to Book</Text>
-          
+
           {profiles.map(profile => (
-            <TouchableOpacity 
+            <TouchableOpacity
               key={profile.id}
               style={[styles.profileCard, profile.selected && styles.profileSelected]}
               onPress={() => toggleProfileSelection(profile.id)}
@@ -115,7 +71,6 @@ const SetAppointment = () => {
               <View style={styles.profileInfo}>
                 <Text style={styles.profileName}>{profile.name}</Text>
                 <Text style={styles.profileDetails}>Age: {profile.age}</Text>
-                <Text style={styles.profileDetails}>{profile.relationship}</Text>
               </View>
               <View style={styles.checkboxContainer}>
                 <View style={profile.selected ? styles.checkboxSelected : styles.checkbox}>
@@ -124,136 +79,37 @@ const SetAppointment = () => {
               </View>
             </TouchableOpacity>
           ))}
-          
+
           {/* Add Another Profile Button */}
           <TouchableOpacity style={styles.addProfileButton} onPress={openAddProfileModal}>
             <Feather name="plus" size={16} color="#009688" />
             <Text style={styles.addProfileText}>Add Another Profile</Text>
           </TouchableOpacity>
         </View>
-        
-        {/* Add spacing at the bottom to accommodate fixed footer */}
         <View style={{ height: 130 }} />
       </ScrollView>
 
-      {/* Footer with Booking Info and Primary Button */}
       <View style={styles.footer}>
-        {/* Booking Information */}
         <Text style={styles.bookingInfo}>
           Booking for {getSelectedCount()} profile{getSelectedCount() !== 1 ? 's' : ''} on Apr 26, 2025 at 10:30 AM
         </Text>
-        
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[
             styles.primaryBtn,
             getSelectedCount() === 0 && styles.disabledButton
           ]}
           disabled={getSelectedCount() === 0}
+          onPress={handleConfirmBooking} // Tambahkan ini
         >
           <Text style={styles.confirmButtonText}>Confirm Booking</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Bottom Sheet Modal for Add Profile */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={closeAddProfileModal}
-      >
-        <TouchableOpacity 
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={closeAddProfileModal}
-        >
-          <View style={styles.bottomSheetContainer}>
-            <TouchableOpacity 
-              activeOpacity={1} 
-              onPress={e => e.stopPropagation()} 
-              style={styles.bottomSheet}
-            >
-              {/* Bottom Sheet Handle */}
-              <View style={styles.bottomSheetHandle}>
-                <View style={styles.handle} />
-              </View>
-              
-              {/* Bottom Sheet Header */}
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Add New Profile</Text>
-                <TouchableOpacity onPress={closeAddProfileModal}>
-                  <Feather name="x" size={24} color="#888" />
-                </TouchableOpacity>
-              </View>
-
-              {/* Bottom Sheet Content */}
-              <ScrollView style={styles.modalForm}>
-                {/* Full Name Input */}
-                <View style={styles.modalInputContainer}>
-                  <Text style={styles.inputLabel}>Full Name</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Enter full name"
-                    placeholderTextColor="#a0a0a0"
-                    value={newName}
-                    onChangeText={setNewName}
-                  />
-                </View>
-
-                {/* Age Input */}
-                <View style={styles.modalInputContainer}>
-                  <Text style={styles.inputLabel}>Age</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Enter age"
-                    placeholderTextColor="#a0a0a0"
-                    keyboardType="numeric"
-                    value={newAge}
-                    onChangeText={setNewAge}
-                  />
-                </View>
-
-                {/* Relationship Radio Selection */}
-                <View style={styles.modalInputContainer}>
-                  <Text style={styles.inputLabel}>Relationship</Text>
-                  <View style={styles.radioContainer}>
-                    {relationshipOptions.map((option) => (
-                      <TouchableOpacity
-                        key={option}
-                        style={styles.radioOption}
-                        onPress={() => selectRelationship(option)}
-                      >
-                        <View style={styles.radioButtonContainer}>
-                          <View style={styles.radioOuterCircle}>
-                            {newRelationship === option && <View style={styles.radioInnerCircle} />}
-                          </View>
-                          <Text style={styles.radioButtonText}>{option}</Text>
-                        </View>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                </View>
-
-                {/* Modal Action Buttons */}
-                <View style={styles.modalActions}>
-                  <TouchableOpacity 
-                    style={styles.cancelButton}
-                    onPress={closeAddProfileModal}
-                  >
-                    <Text style={styles.cancelButtonText}>Cancel</Text>
-                  </TouchableOpacity>
-                  
-                  <TouchableOpacity 
-                    style={styles.addButton}
-                    onPress={handleAddProfile}
-                  >
-                    <Text style={styles.addButtonText}>Add Profile</Text>
-                  </TouchableOpacity>
-                </View>
-              </ScrollView>
-            </TouchableOpacity>
-          </View>
-        </TouchableOpacity>
-      </Modal>
+      <AddProfileForm
+        isVisible={modalVisible}
+        onClose={closeAddProfileModal}
+        onSave={handleAddProfile}
+      />
     </View>
   );
 };
@@ -283,7 +139,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     marginBottom: 12,
   },
-  // New styles for guardian info text display
   infoContainer: {
     // marginTop: 12,
     paddingVertical: 6,
@@ -298,7 +153,6 @@ const styles = StyleSheet.create({
     color: "#333",
     fontWeight: "500",
   },
-  // Original styles
   inputContainer: {
     marginBottom: 12,
   },
