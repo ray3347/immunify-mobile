@@ -7,6 +7,11 @@
     "scheme": "immunify",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/icons/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#008B8B"
+    },
     "ios": {
       "supportsTablet": true
     },
@@ -15,7 +20,13 @@
         "foregroundImage": "./assets/icons/adaptive-icon.png",
         "backgroundColor": "#008B8B"
       },
-      "package": "com.anonymous.immunify"
+      "package": "com.anonymous.immunify",
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_LOCATION"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -37,10 +48,16 @@
           "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location.",
           "isAndroidForegroundServiceEnabled": true
         }
-      ]
+      ],
+      "expo-router"
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "d7cf1840-e448-49f0-af17-89dc6a5fad63"
+      }
     }
   }
 }
