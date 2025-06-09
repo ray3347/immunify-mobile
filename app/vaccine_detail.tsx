@@ -22,7 +22,7 @@ const VaccineDetail = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log(vaccineId)
+    console.log(vaccineId);
     setLoading(true);
     if (vaccineId && vaccineList.length > 0) {
       const active = vaccineList.find((x) => x.id === vaccineId);
@@ -33,26 +33,16 @@ const VaccineDetail = () => {
     setLoading(false);
   }, []);
 
-  const locations = [
-    { name: "Downtown Medical Center", distance: "0.8" },
-    { name: "City Health Clinic", distance: "1.2" },
-  ];
-
-  const requirements = [
-    "Age 12 years and older",
-    "Valid ID required",
-    "Health screening on-site",
-  ];
-
-  const sideEffects = [
-    "Pain at injection site",
-    "Fatigue",
-    "Headache",
-    "Muscle pain",
-  ];
-
-  const goToBookAppointment = () => {
-    router.push("/book_clinic");
+  const goToBookAppointment = (clinicId: string) => {
+    router.push({
+      pathname: "/book_clinic",
+      params: { clinicId: clinicId, vaccineId: vaccineId },
+    });
+    // router.push("/book_clinic");
+    // router.push({
+    //   pathname: "/vaccine_detail",
+    //   params: { vaccineId: vaccine.id }
+    // });
   };
   return (
     <ScrollView style={styles.scrollContainer}>
@@ -67,14 +57,22 @@ const VaccineDetail = () => {
           <View style={styles.card}>
             <View style={styles.centeredRow}>
               <Image
-                source={activeVaccine?.image != "" ? {uri: activeVaccine?.image} :require("../assets/images/vaccine.png")}
+                source={
+                  activeVaccine?.image != ""
+                    ? { uri: activeVaccine?.image }
+                    : require("../assets/images/vaccine.png")
+                }
                 style={styles.vaccineImage}
               />
               <View style={{ flex: 1 }}>
-                <Text style={styles.headingText}>{activeVaccine?.vaccineName}</Text>
+                <Text style={styles.headingText}>
+                  {activeVaccine?.vaccineName}
+                </Text>
                 <View style={styles.mt8}>
                   <Text style={styles.labelText}>Start from</Text>
-                  <Text style={styles.titleText}>{activeVaccine?.price} / dose</Text>
+                  <Text style={styles.titleText}>
+                    {activeVaccine?.price} / dose
+                  </Text>
                 </View>
               </View>
             </View>
@@ -88,7 +86,9 @@ const VaccineDetail = () => {
                   source={require("../assets/icons/injection_icon.png")}
                   style={styles.iconMedium}
                 />
-                <Text style={styles.labelText}>{activeVaccine?.doses.toString()} Doses</Text>
+                <Text style={styles.labelText}>
+                  {activeVaccine?.doses.toString()} Doses
+                </Text>
               </View>
               <View style={styles.divider} />
               <View style={styles.infoItem}>
@@ -96,7 +96,9 @@ const VaccineDetail = () => {
                   source={require("../assets/icons/clock.png")}
                   style={styles.iconMedium}
                 />
-                <Text style={styles.labelText}>{activeVaccine?.doseInterval.toString()} Days Apart</Text>
+                <Text style={styles.labelText}>
+                  {activeVaccine?.doseInterval.toString()} Days Apart
+                </Text>
               </View>
               <View style={styles.divider} />
               <View style={styles.infoItem}>
@@ -104,7 +106,9 @@ const VaccineDetail = () => {
                   source={require("../assets/icons/user-check.png")}
                   style={styles.iconMedium}
                 />
-                <Text style={styles.labelText}>{activeVaccine?.minimumAge.toString()} and older</Text>
+                <Text style={styles.labelText}>
+                  {activeVaccine?.minimumAge.toString()} and older
+                </Text>
               </View>
             </View>
           </View>
@@ -130,26 +134,38 @@ const VaccineDetail = () => {
           </View>
 
           <View style={styles.locationsContainer}>
-            <Text style={styles.headingText}>Available at</Text>
-            {activeVaccine?.availableAt.map((location, index) => (
-              <InfoCard
-                key={index}
-                iconSource={require("../assets/icons/hospital.png")}
-                rightIconSource={require("../assets/icons/chevron_down.png")}
-                title={location.name}
-                // subtitle={`${location.distance} km away`}
-                onPress={goToBookAppointment}
-              />
-            ))}
+            <Text style={styles.headingText}>Available to Book at</Text>
+            {activeVaccine?.availableAt.length == 0 ? (
+              <>
+                <Text style={styles.bodyText}>
+                  No clinic provides this type of vaccine yet, sorry :(
+                </Text>
+              </>
+            ) : (
+              <>
+                {activeVaccine?.availableAt.map((location, index) => (
+                  <InfoCard
+                    key={index}
+                    iconSource={require("../assets/icons/hospital.png")}
+                    rightIconSource={require("../assets/icons/chevron_down.png")}
+                    title={location.name}
+                    // subtitle={`${location.distance} km away`}
+                    onPress={() => {
+                      goToBookAppointment(location.id);
+                    }}
+                  />
+                ))}
+              </>
+            )}
+
             {/* Tambahkan tombol Book Appointment di bawah daftar lokasi */}
-            <TouchableOpacity
+            {/* <TouchableOpacity
               // style={styles.bookButton}
               onPress={goToBookAppointment}
             >
               <Text >Book Appointment</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
-          
         </View>
       )}
     </ScrollView>
@@ -325,7 +341,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#008B8B",
     fontWeight: "600",
-  }, 
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",

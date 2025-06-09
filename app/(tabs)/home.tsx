@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  BackHandler,
 } from "react-native";
 // import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -20,40 +21,54 @@ import Label from "../../components/Label";
 import InfoCard from "../../components/InfoCard";
 import CardNoBorder from "../../components/CardNoBorder";
 import TextButton from "../../components/TextButton";
-import ProfileBottomSheet from "../../components/ProfileBottomSheet"; 
-import { useActiveSession } from "../../utilities/zustand";
+import ProfileBottomSheet from "../../components/ProfileBottomSheet";
+import {
+  useActiveSession,
+  useRecommendedVaccineList,
+  useUserLocation,
+  useVaccineList,
+} from "../../utilities/zustand";
+import { fetchVaccines } from "../../utilities/api/vaccines";
+import { getRecommendedVaccines } from "../../utilities/api/user";
 
 const Home = () => {
   const [modalVisible, setModalVisible] = useState(false);
-  const {activeAccount, activeUser} = useActiveSession();
+  const { activeAccount, activeUser, switchUser } = useActiveSession();
+  const { vaccineList, setVaccineList } = useVaccineList();
+  const { latitude, longtitude } = useUserLocation();
+  const { recommendedList, setRecommendedList } = useRecommendedVaccineList();
 
-  const [profiles, setProfiles] = useState([
-    {
-      id: "1",
-      name: "John Doe",
-      color: "#5B9BD5",
-      selected: true,
-      gender: "male",
-      dateOfBirth: "1990-01-01",
-    },
-    {
-      id: "2",
-      name: "Jane Smith",
-      color: "#F08A9B",
-      selected: false,
-      gender: "female",
-      dateOfBirth: "1992-05-15",
-    },
-  ]);
+  useEffect(() => {
+    // Disable Android back button
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => true
+    );
+
+    return () => backHandler.remove();
+  }, []);
+
+  useEffect(() => {
+    if (vaccineList.length == 0) {
+      fetchVaccines(latitude ?? "", longtitude ?? "").then((res) => {
+        if (res) {
+          setVaccineList(res);
+        }
+      });
+    }
+  }, []);
 
   // Handler untuk memilih profile
   const handleProfileToggle = (profileId: string) => {
-    setProfiles((prev) =>
-      prev.map((p) => ({
-        ...p,
-        selected: p.id === profileId,
-      }))
-    );
+    const newUser = activeAccount?.userList.find((p) => p.id == profileId);
+    if (newUser) {
+      switchUser(newUser);
+      getRecommendedVaccines(activeAccount?.id ?? "", newUser.id).then(
+        (res) => {
+          setRecommendedList(res);
+        }
+      );
+    }
     setModalVisible(false);
   };
 
@@ -61,13 +76,19 @@ const Home = () => {
     setModalVisible(false);
   };
 
-  useEffect(()=>{
+  useEffect(() => {
     console.log(activeUser);
-  },[])
+  }, []);
 
   const router = useRouter();
   const handleNextArticle = () => router.push("../clinic_detail");
   const viewArticlePage = () => router.push("../article_detail");
+  const viewAllVaccine = () => router.push("/(tabs)/vaccines");
+  const viewVaccineDetail = (id: string) =>
+    router.push({
+      pathname: "/vaccine_detail",
+      params: { vaccineId: id },
+    });
 
   return (
     <>
@@ -78,11 +99,9 @@ const Home = () => {
               <Text style={styles.greetingText}>Hello,</Text>
               <TouchableOpacity
                 style={styles.nameRow}
-                onPress={() => setModalVisible(true)} 
+                onPress={() => setModalVisible(true)}
               >
-                <Text style={styles.nameText}>
-                  {activeUser?.fullName}
-                </Text>
+                <Text style={styles.nameText}>{activeUser?.fullName}</Text>
                 <Image
                   source={require("../../assets/icons/chevron_down.png")}
                   style={styles.chevronIcon}
@@ -93,6 +112,10 @@ const Home = () => {
 
           <ScrollView showsVerticalScrollIndicator={false}>
             <UpcomingVaccineSection />
+            <VaccinesSection
+              onPress={viewAllVaccine}
+              onViewDetail={viewVaccineDetail}
+            />
             <ArticlesSection
               onPress={handleNextArticle}
               onViewDetail={viewArticlePage}
@@ -105,7 +128,7 @@ const Home = () => {
       <ProfileBottomSheet
         isVisible={modalVisible}
         onClose={() => setModalVisible(false)}
-        profiles={profiles}
+        profiles={activeAccount?.userList ?? []}
         onProfileToggle={handleProfileToggle}
         onAddNewProfile={handleAddNewProfile}
       />
@@ -113,11 +136,45 @@ const Home = () => {
   );
 };
 
-const UpcomingVaccineSection = () => (
-  <View style={styles.sectionSpacing}>
-    <Text style={styles.sectionTitle}>Upcoming Vaccine</Text>
-    <Text style={styles.sectionSubtitle}>Here are your next appointments</Text>
-    <InfoCard
+const UpcomingVaccineSection = () => {
+  const { recommendedList, setRecommendedList } = useRecommendedVaccineList();
+  const router = useRouter();
+  return (
+    <View style={styles.sectionSpacing}>
+      <Text style={styles.sectionTitle}>Recommended Vaccines</Text>
+      <Text style={styles.sectionSubtitle}>
+        We think you might need these vaccines
+      </Text>
+      {recommendedList.map((v) => (
+        <InfoCard
+          onPress={() => {
+            router.push({
+              pathname: "/vaccine_detail",
+              params: { vaccineId: v.vaccine.id },
+            });
+          }}
+          key={v.vaccine.id}
+          iconSource={require("../../assets/icons/injection_fill.png")}
+          title={v.vaccine.vaccineName}
+          subtitle={
+            <View style={styles.subtitleRow}>
+              <Text style={styles.subtitleText}>
+                {/* {v.message.split(' ')[0] + " Vaccination"} */}
+                Vaccination Progress
+              </Text>
+              <Label
+                text={`Dose ${v.nextDose.toString()} of ${v.message.substring(
+                  v.message.length - 2,
+                  v.message.length - 1
+                )}`}
+                variant="orange"
+              />
+            </View>
+          }
+          rightIconSource={require("../../assets/icons/chevron_down.png")}
+        />
+      ))}
+      {/* <InfoCard
       iconSource={require("../../assets/icons/injection_fill.png")}
       title="HPV"
       subtitle={
@@ -126,10 +183,10 @@ const UpcomingVaccineSection = () => (
           <Label text="3 Days" variant="orange" />
         </View>
       }
-    />
-  </View>
-);
-
+    /> */}
+    </View>
+  );
+};
 
 const vaccineArticles = [
   {
@@ -168,10 +225,10 @@ const ArticlesSection = ({
             Get insights about vaccination
           </Text>
         </View>
-        <TextButton
+        {/* <TextButton
           text="View All"
           onPress={() => console.log("Text button pressed")}
-        />
+        /> */}
       </View>
 
       <ScrollView
@@ -186,6 +243,51 @@ const ArticlesSection = ({
             title={article.title}
             summary={article.subtitle}
             imageSource={article.image}
+          />
+        ))}
+      </ScrollView>
+    </View>
+  );
+};
+
+const VaccinesSection = ({
+  onPress,
+  onViewDetail,
+}: {
+  onPress: () => void;
+  onViewDetail: (id: string) => void;
+}) => {
+  const { vaccineList, setVaccineList } = useVaccineList();
+  return (
+    <View style={styles.sectionSpacing}>
+      <View style={styles.headerRow}>
+        <View>
+          <Text style={styles.sectionTitle}>Vaccine Information</Text>
+          <Text style={[styles.sectionSubtitle, styles.mb16]}>
+            Know your vaccines!
+          </Text>
+        </View>
+        <TextButton text="View All" onPress={onPress} />
+      </View>
+
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.clinicsScrollContent}
+      >
+        {vaccineList.slice(0, 5).map((article, i) => (
+          <CardNoBorder
+            key={i}
+            onPress={() => {
+              onViewDetail(article.id);
+            }}
+            title={article.vaccineName}
+            summary={article.informationSummary[0]}
+            imageSource={
+              article.image
+                ? { uri: article.image }
+                : require("../../assets/images/vaccine.png")
+            }
           />
         ))}
       </ScrollView>

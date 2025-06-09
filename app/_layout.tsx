@@ -34,6 +34,7 @@ const BackButton = ({ color = "#676767", marginLeft = 0 }) => {
         if (router.canGoBack()) {
           router.back();
         } else {
+          console.log('adadasd')
           router.replace("/"); // or router.push("/(tabs)") or any safe fallback
         }
       }}
@@ -94,6 +95,23 @@ export default function RootLayout() {
         options={{
           headerShown: true,
           title: "Detail Record",
+          headerLeft: () => <BackButton />,
+        }}
+      />
+      <Stack.Screen
+        name="vaccine_detail"
+        options={{
+          headerShown: true,
+          title: "Vaccine Detail",
+          headerLeft: () => <BackButton />,
+        }}
+      />
+
+      <Stack.Screen
+        name="edit_profile"
+        options={{
+          headerShown: true,
+          title: "Edit Profile",
           headerLeft: () => <BackButton />,
         }}
       />

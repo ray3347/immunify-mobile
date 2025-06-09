@@ -1,29 +1,68 @@
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Dimensions } from "react-native";
-import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  Dimensions,
+} from "react-native";
+import React, { useEffect, useState } from "react";
 import { Feather } from "@expo/vector-icons";
 import AddProfileForm from "../components/AddProfileForm"; // Pastikan komponen ini sudah ada
-import { useRouter } from "expo-router"; // Tambahkan import ini
+import { useLocalSearchParams, useRouter } from "expo-router"; // Tambahkan import ini
+import { useActiveSession, useVaccineList } from "../utilities/zustand";
+import { IClinic } from "../interfaces/db/IClinic";
+import { IVaccine } from "../interfaces/db/IVaccine";
+import VaccineCard from "../components/VaccineCard";
+import ListCard from "../components/ListCard";
+import InfoCard from "../components/InfoCard";
+import dayjs from "dayjs";
+import { bookAppointment } from "../utilities/api/appointment";
+import { IBookAppointmentRequestDTO } from "../interfaces/requests/IBookAppointmentRequestDTO";
 
-interface Profile {
-  id: string;
-  name: string;
-  age: string;
-  selected: boolean;
-}
+// interface Profile {
+//   id: string;
+//   name: string;
+//   age: string;
+//   selected: boolean;
+// }
 
 const SetAppointment = () => {
+  const { vaccineId, clinicId, date, time } = useLocalSearchParams();
   const [modalVisible, setModalVisible] = useState(false);
-  const [profiles, setProfiles] = useState<Profile[]>([
-    { id: '1', name: 'Tommy Anderson', age: '12', selected: true },
-    { id: '2', name: 'Emma Anderson', age: '8', selected: false },
-    { id: '3', name: 'John Anderson', age: '42', selected: false }
-  ]);
+  // const [profiles, setProfiles] = useState<Profile[]>([
+  //   { id: '1', name: 'Tommy Anderson', age: '12', selected: true },
+  //   { id: '2', name: 'Emma Anderson', age: '8', selected: false },
+  //   { id: '3', name: 'John Anderson', age: '42', selected: false }
+  // ]);
   const router = useRouter(); // Tambahkan ini
+  const { activeAccount, activeUser, switchAccount, switchUser } =
+    useActiveSession();
+  const [selectedUser, setSelectedUser] = useState(activeUser);
+  const { vaccineList } = useVaccineList();
+
+  const [activeVaccine, setActiveVaccine] = useState<IVaccine>();
+  const [activeClinic, setActiveClinic] = useState<IClinic>();
+
+  useEffect(() => {
+    const vaccine = vaccineList.find((v) => v.id == vaccineId);
+    if (vaccine) {
+      setActiveVaccine(vaccine);
+      const clinic = vaccine.availableAt.find((c) => c.id == clinicId);
+      if (clinic) {
+        setActiveClinic(clinic);
+      }
+    }
+  }, []);
 
   const toggleProfileSelection = (id: string) => {
-    setProfiles(profiles.map(profile => 
-      profile.id === id ? { ...profile, selected: !profile.selected } : profile
-    ));
+    const profile = activeAccount?.userList.find((u) => u.id == id);
+    if (profile) {
+      setSelectedUser(profile);
+    }
+    // setProfiles(profiles.map(profile =>
+    //   profile.id === id ? { ...profile, selected: !profile.selected } : profile
+    // ));
   };
 
   const openAddProfileModal = () => {
@@ -34,25 +73,48 @@ const SetAppointment = () => {
     setModalVisible(false);
   };
 
-  const handleAddProfile = (profile: { name: string; dateOfBirth?: string }) => {
-    const newProfile: Profile = {
-      id: Date.now().toString(),
-      name: profile.name,
-      age: profile.dateOfBirth
-        ? (new Date().getFullYear() - Number(profile.dateOfBirth.split('-')[0])).toString()
-        : '',
-      selected: false,
-    };
-    setProfiles([...profiles, newProfile]);
+  const handleAddProfile = (profile: {
+    name: string;
+    dateOfBirth?: string;
+  }) => {
+    // const newProfile: Profile = {
+    //   id: Date.now().toString(),
+    //   name: profile.name,
+    //   age: profile.dateOfBirth
+    //     ? (new Date().getFullYear() - Number(profile.dateOfBirth.split('-')[0])).toString()
+    //     : '',
+    //   selected: false,
+    // };
+    // setProfiles([...profiles, newProfile]);
     setModalVisible(false);
   };
 
-  const getSelectedCount = () => {
-    return profiles.filter(profile => profile.selected).length;
-  };
+  // const getSelectedCount = () => {
+  //   return profiles.filter(profile => profile.selected).length;
+  // };
 
   const handleConfirmBooking = () => {
-    router.replace("/booking_summary");
+    if (activeVaccine && activeClinic) {
+      const req: IBookAppointmentRequestDTO = {
+        userId: selectedUser?.id ?? "",
+        clinicId: activeClinic.id,
+        selectedDate: typeof date === "string" ? new Date(date) : new Date(),
+        selectedStartTime: typeof time === "string" ? time : "",
+        vaccine: activeVaccine,
+      };
+      bookAppointment(activeAccount?.id ?? "", req).then((res) => {
+        switchAccount(res.dto);
+        const user = res.dto.userList.find((u) => u.id == activeUser?.id);
+        if (user) {
+          switchUser(user);
+        }
+
+        router.replace({
+          pathname: "/booking_summary",
+          params: {appointmentId: res.appointmentId, appointedUserId: activeUser?.id, isResultScreen: 'true'}
+        });
+      });
+    }
   };
 
   return (
@@ -62,43 +124,92 @@ const SetAppointment = () => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Select Profiles to Book</Text>
 
-          {profiles.map(profile => (
+          {activeAccount?.userList.map((profile) => (
             <TouchableOpacity
               key={profile.id}
-              style={[styles.profileCard, profile.selected && styles.profileSelected]}
+              style={[
+                styles.profileCard,
+                profile.id == selectedUser?.id && styles.profileSelected,
+              ]}
               onPress={() => toggleProfileSelection(profile.id)}
             >
               <View style={styles.profileInfo}>
-                <Text style={styles.profileName}>{profile.name}</Text>
-                <Text style={styles.profileDetails}>Age: {profile.age}</Text>
+                <Text style={styles.profileName}>{profile.fullName}</Text>
+                {/* <Text style={styles.profileDetails}>Age: {profile.age}</Text> */}
               </View>
               <View style={styles.checkboxContainer}>
-                <View style={profile.selected ? styles.checkboxSelected : styles.checkbox}>
-                  {profile.selected && <Feather name="check" size={16} color="white" />}
+                <View
+                  style={
+                    profile.id == selectedUser?.id
+                      ? styles.checkboxSelected
+                      : styles.checkbox
+                  }
+                >
+                  {profile.id == selectedUser?.id && (
+                    <Feather name="check" size={16} color="white" />
+                  )}
                 </View>
               </View>
             </TouchableOpacity>
           ))}
 
           {/* Add Another Profile Button */}
-          <TouchableOpacity style={styles.addProfileButton} onPress={openAddProfileModal}>
+          <TouchableOpacity
+            style={styles.addProfileButton}
+            onPress={openAddProfileModal}
+          >
             <Feather name="plus" size={16} color="#009688" />
             <Text style={styles.addProfileText}>Add Another Profile</Text>
           </TouchableOpacity>
+        </View>
+        <View>
+          <Text style={styles.sectionTitle}>Appointment Details</Text>
+          <InfoCard
+            iconSource={
+              activeClinic?.image
+                ? { uri: activeClinic.image }
+                : require("../assets/images/vaccine.png")
+            }
+            title={activeClinic?.name ?? ""}
+            subtitle={`${activeClinic?.address}`}
+            titleColor="#4B5563"
+          />
+          <InfoCard
+            iconSource={
+              activeVaccine?.image
+                ? { uri: activeVaccine.image }
+                : require("../assets/images/vaccine.png")
+            }
+            title={activeVaccine?.vaccineName ?? ""}
+            subtitle={`${activeVaccine?.price} - Pay during your visit`}
+            titleColor="#4B5563"
+          />
+          {/* <VaccineCard
+            title={activeVaccine?.vaccineName ?? ""}
+            image={
+              activeVaccine?.image
+                ? { uri: activeVaccine.image }
+                : require("../assets/images/vaccine.png")
+            }
+            location={""}
+            distance={"Available"}
+            price={activeVaccine?.price ?? ""}
+          /> */}
         </View>
         <View style={{ height: 130 }} />
       </ScrollView>
 
       <View style={styles.footer}>
         <Text style={styles.bookingInfo}>
-          Booking for {getSelectedCount()} profile{getSelectedCount() !== 1 ? 's' : ''} on Apr 26, 2025 at 10:30 AM
+          Booking for {selectedUser?.fullName} on{" "}
+          {dayjs(typeof date === "string" ? new Date(date) : new Date()).format(
+            "dddd, DD MMMM YYYY"
+          )}{" "}
+          at {typeof time === "string" ? time : ""}
         </Text>
         <TouchableOpacity
-          style={[
-            styles.primaryBtn,
-            getSelectedCount() === 0 && styles.disabledButton
-          ]}
-          disabled={getSelectedCount() === 0}
+          style={[styles.primaryBtn, !selectedUser && styles.disabledButton]}
+          disabled={!selectedUser}
           onPress={handleConfirmBooking} // Tambahkan ini
         >
           <Text style={styles.confirmButtonText}>Confirm Booking</Text>
@@ -114,7 +225,7 @@ const SetAppointment = () => {
   );
 };
 
-const { height: screenHeight } = Dimensions.get('window');
+const { height: screenHeight } = Dimensions.get("window");
 
 const styles = StyleSheet.create({
   mainContainer: {
@@ -132,7 +243,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#ddd'
+    borderColor: "#ddd",
   },
   sectionTitle: {
     fontSize: 18,
@@ -228,7 +339,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     alignItems: "center",
     width: "100%",
-    position: "absolute", 
+    position: "absolute",
     bottom: 0,
     paddingBottom: 16,
     borderTopWidth: 1,

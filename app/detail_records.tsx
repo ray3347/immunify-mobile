@@ -1,3 +1,4 @@
+import { useLocalSearchParams } from "expo-router";
 import React from "react";
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Linking, Alert } from "react-native";
 
@@ -26,7 +27,7 @@ const openMaps = (address: string) => {
 
 const DetailRecords = () => {
   const record = DUMMY_RECORD;
-
+  const {appointmentId} = useLocalSearchParams(); 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView>

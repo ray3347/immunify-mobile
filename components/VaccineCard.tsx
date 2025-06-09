@@ -1,49 +1,59 @@
-import { View, Text, TouchableOpacity, Image, StyleSheet, Dimensions } from 'react-native';
-import React from 'react'
-import { Ionicons} from '@expo/vector-icons';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Image,
+  StyleSheet,
+  Dimensions,
+} from "react-native";
+import React from "react";
+import { Ionicons } from "@expo/vector-icons";
 
 type CardItemProps = {
-  image: any; 
+  image: any;
   title: string;
   location: string;
   distance: string;
   price: string;
-  onPress?: ()=> void;
+  onPress?: () => void;
 };
 
-const VaccineCard: React.FC<CardItemProps> = ({ image, title, location, distance, price, onPress }) => (
+const VaccineCard: React.FC<CardItemProps> = ({
+  image,
+  title,
+  location,
+  distance,
+  price,
+  onPress,
+}) => (
   <TouchableOpacity style={styles.card} onPress={onPress}>
-    <Image
-      resizeMode="cover"
-      style={styles.image}
-      source={image}
-    />
+    <Image resizeMode="cover" style={styles.image} source={image} />
     <View>
       <Text style={styles.title}>{title}</Text>
+
+      <View style={{ paddingTop: 0 }}>
+        <Text style={styles.subtitle}>Start from</Text>
+        <Text style={styles.title}>{price}</Text>
+      </View>
       <View style={styles.statsRow}>
-        <Text
+        {/* <Text
           style={[styles.subtitle, styles.textbox]}
           numberOfLines={1}
           ellipsizeMode="tail"
         >
           {location}
-        </Text>
+        </Text> */}
         <View style={styles.distanceContainer}>
-        <Ionicons name="send" style={styles.icon} />
+          <Ionicons name="send" style={styles.icon} />
           <Text style={styles.distance_label}>{distance}</Text>
         </View>
-      </View>
-
-      <View style={{ paddingTop: 12 }}>
-        <Text style={styles.subtitle}>Start from</Text>
-        <Text style={styles.title}>{price}</Text>
       </View>
     </View>
   </TouchableOpacity>
 );
 
-const { width } = Dimensions.get('window');
-const cardWidthPercentage = 45; 
+const { width } = Dimensions.get("window");
+const cardWidthPercentage = 45;
 const cardWidth = width * (cardWidthPercentage / 100);
 
 const styles = StyleSheet.create({
@@ -53,12 +63,12 @@ const styles = StyleSheet.create({
     paddingTop: 16,
   },
   scrollContent: {
-    paddingHorizontal: '4%',
+    paddingHorizontal: "4%",
     paddingBottom: 0,
   },
   content: {
     backgroundColor: "white",
-    marginVertical: '2%',
+    marginVertical: "2%",
     width: "100%",
     flexDirection: "row",
   },
@@ -68,7 +78,7 @@ const styles = StyleSheet.create({
   statsRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingTop: '2%',
+    paddingTop: "2%",
     justifyContent: "space-between",
   },
   rowItem: {
@@ -81,17 +91,17 @@ const styles = StyleSheet.create({
     color: "#008B8B",
   },
   starIcon: {
-    marginRight: '1%',
+    marginRight: "1%",
   },
   statText: {
     fontSize: 14,
     color: "#777",
-    marginLeft: '1%',
+    marginLeft: "1%",
   },
   image: {
-    height: cardWidth * 0.8, 
-    width: '100%',
-    marginBottom: '4%'
+    height: cardWidth * 0.8,
+    width: "100%",
+    marginBottom: "4%",
   },
   title: {
     fontSize: 16,
@@ -112,7 +122,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   textbox: {
-    width: '60%',
+    width: "60%",
   },
   card: {
     width: cardWidth,
@@ -124,7 +134,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#EEFBF8",
     padding: 4,
     alignSelf: "flex-start",
-  }
+  },
 });
 
-export default VaccineCard
+export default VaccineCard;

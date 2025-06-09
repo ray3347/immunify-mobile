@@ -10,6 +10,9 @@ import {
   FlatList,
   TextInput,
   SafeAreaView,
+  Image,
+  Alert,
+  Button,
 } from "react-native";
 import { Calendar, DateData } from "react-native-calendars";
 import { ChevronDown, Plus, X } from "react-native-feather";
@@ -18,37 +21,56 @@ import { Dropdown } from "react-native-element-dropdown";
 import PrimaryButton from "../../components/PrimaryButton";
 import dayjs from "dayjs";
 import { useRouter } from "expo-router";
-interface VaccineRecord {
-  id: string;
-  userId: string;
-  userName: string;
-  userColor: string;
-  vaccineName: string;
-  date: string;
-  time: string;
-  location: string;
-  dose: string;
-}
+import { useActiveSession, useVaccineList } from "../../utilities/zustand";
+import { IVaccine } from "../../interfaces/db/IVaccine";
+import { IUser, IVaccinationHistory } from "../../interfaces/db/IUser";
+import { addVaccinationHistory } from "../../utilities/api/user";
+import * as MediaLibrary from "expo-media-library";
+import * as FileSystem from "expo-file-system";
+import uuid from 'react-native-uuid';
 
-interface User {
-  id: string;
-  name: string;
-  color: string;
-}
+// interface VaccineRecord {
+//   id: string;
+//   userId: string;
+//   userName: string;
+//   userColor: string;
+//   vaccineName: string;
+//   date: string;
+//   time: string;
+//   location: string;
+//   dose: string;
+// }
+
+// interface User {
+//   id: string;
+//   name: string;
+//   color: string;
+// }
 
 const Tracker = () => {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [selectedDate, setSelectedDate] = useState<string>(dayjs().format("YYYY-MM-DD"));
+  const [selectedDate, setSelectedDate] = useState<string>(
+    dayjs().format("YYYY-MM-DD")
+  );
   const [monthPickerVisible, setMonthPickerVisible] = useState(false);
-
-  const [addRecordVisible, setAddRecordVisible] = useState(false);
 
   const [expandedRecordId, setExpandedRecordId] = useState<string | null>(null);
   const router = useRouter();
-    // useEffect(()=>{
-    //   setSelectedDate(dayjs(new Date()).format("DD MMMM YYYY"))
-    // },[]);
+  const { activeAccount } = useActiveSession();
+  // useEffect(()=>{
+  //   setSelectedDate(dayjs(new Date()).format("DD MMMM YYYY"))
+  // },[]);
+
+  const userColors = [
+    "#1E90FF", // Dodger Blue
+    "#FF6347", // Tomato
+    "#32CD32", // Lime Green
+    "#FFD700", // Gold
+    "#BA55D3", // Medium Orchid
+    "#00CED1", // Dark Turquoise
+    "#FF69B4", // Hot Pink
+  ];
 
   const toggleRecord = (id: string) => {
     if (expandedRecordId === id) {
@@ -58,66 +80,121 @@ const Tracker = () => {
     }
   };
 
-  const users = [
-    { id: "1", name: "Jane Doe", color: "pink" },
-    { id: "2", name: "John Doe", color: "blue" },
-  ];
+  // const users = [
+  //   { id: "1", name: "Jane Doe", color: "pink" },
+  //   { id: "2", name: "John Doe", color: "blue" },
+  // ];
 
-  const [vaccineRecords, setVaccineRecords] = useState<VaccineRecord[]>([
-    {
-      id: "1",
-      userId: "1",
-      userName: "Jane Doe",
-      userColor: "pink",
-      vaccineName: "COVID-19 Booster",
-      date: "2025-01-15",
-      time: "10:00 AM",
-      location: "City Clinic",
-      dose: "2nd dose",
-    },
-    {
-      id: "2",
-      userId: "2",
-      userName: "John Doe",
-      userColor: "blue",
-      vaccineName: "Flu Shot",
-      date: "2025-01-20",
-      time: "2:30 PM",
-      location: "Health Center",
-      dose: "1st dose",
-    },
-  ]);
+  // const [vaccineRecords, setVaccineRecords] = useState<VaccineRecord[]>([
+  //   {
+  //     id: "1",
+  //     userId: "1",
+  //     userName: "Jane Doe",
+  //     userColor: "pink",
+  //     vaccineName: "COVID-19 Booster",
+  //     date: "2025-01-15",
+  //     time: "10:00 AM",
+  //     location: "City Clinic",
+  //     dose: "2nd dose",
+  //   },
+  //   {
+  //     id: "2",
+  //     userId: "2",
+  //     userName: "John Doe",
+  //     userColor: "blue",
+  //     vaccineName: "Flu Shot",
+  //     date: "2025-01-20",
+  //     time: "2:30 PM",
+  //     location: "Health Center",
+  //     dose: "1st dose",
+  //   },
+  // ]);
+
+  // const getMarkedDates = () => {
+  //   const marked: any = {};
+
+  //   activeAccount?.userList
+  //     .flatMap((u) => u.scheduledAppointments)
+  //     .forEach((record) => {
+  //       const dateString = new Date(record.scheduledDate).toString();
+
+  //       if (!marked[dateString]) {
+  //         marked[dateString] = {
+  //           dots: [],
+  //         };
+  //       }
+
+  //       marked[dateString].dots.push({
+  //         key: record.id,
+  //         color: "blue",
+  //         selectedDotColor: "blue",
+  //         dotStyle: {
+  //           width: 8,
+  //           height: 8,
+  //           borderRadius: 4,
+  //           marginTop: 2,
+  //         },
+  //       });
+  //     });
+
+  //   if (selectedDate) {
+  //     marked[selectedDate] = {
+  //       ...(marked[selectedDate] || {}),
+  //       selected: true,
+  //       selectedColor: "#008B8B",
+  //     };
+  //   }
+
+  //   const today = dayjs().format("YYYY-MM-DD");
+  //   if (today !== selectedDate) {
+  //     marked[today] = {
+  //       ...(marked[today] || {}),
+  //       customStyles: {
+  //         container: {
+  //           borderWidth: 2,
+  //           borderColor: "#FF9800",
+  //           borderRadius: 20,
+  //           backgroundColor: "#FFF8E1",
+  //         },
+  //         text: {
+  //           color: "#FF9800",
+  //           fontWeight: "bold",
+  //         },
+  //       },
+  //       today: true,
+  //     };
+  //   }
+
+  //   return marked;
+  // };
 
   const getMarkedDates = () => {
-    const marked: any = {};
+    const marked: Record<string, any> = {};
 
-    vaccineRecords.forEach((record) => {
-      const dateString = record.date;
+    activeAccount?.userList
+      .flatMap((u) => u.scheduledAppointments)
+      .forEach((record, index) => {
+        const dateString = dayjs(record.scheduledDate).format("YYYY-MM-DD");
 
-      if (!marked[dateString]) {
-        marked[dateString] = {
-          dots: [],
-        };
-      }
+        const userColor = userColors[index % userColors.length];
+        if (!marked[dateString]) {
+          marked[dateString] = {
+            dots: [],
+          };
+        }
 
-      marked[dateString].dots.push({
-        key: record.id,
-        color: record.userColor,
-        selectedDotColor: record.userColor,
-        dotStyle: {
-          width: 8,
-          height: 8,
-          borderRadius: 4,
-          marginTop: 2,
-        },
+        marked[dateString].dots.push({
+          key: record.id,
+          color: userColor,
+          selectedDotColor: "white",
+        });
       });
-    });
 
     if (selectedDate) {
       marked[selectedDate] = {
         ...(marked[selectedDate] || {}),
         selected: true,
-        selectedColor: "#008B8B", 
+        selectedColor: "#008B8B",
       };
     }
 
@@ -130,7 +207,7 @@ const Tracker = () => {
             borderWidth: 2,
             borderColor: "#FF9800",
             borderRadius: 20,
-            backgroundColor: "#FFF8E1", 
+            backgroundColor: "#FFF8E1",
           },
           text: {
             color: "#FF9800",
@@ -149,66 +226,70 @@ const Tracker = () => {
   ).padStart(2, "0")}-01`;
 
   const filteredRecords = selectedDate
-    ? vaccineRecords.filter((record) => record.date === selectedDate)
-    : vaccineRecords;
+    ? activeAccount?.userList
+        .flatMap((u) => u.scheduledAppointments)
+        .filter(
+          (record) =>
+            new Date(record.scheduledDate).toDateString() ===
+            new Date(selectedDate).toDateString()
+        )
+    : activeAccount?.userList.flatMap((u) => u.scheduledAppointments);
 
   const handleDateSelect = (day: DateData) => {
     setSelectedDate(day.dateString);
   };
 
   const handleMonthChange = (monthData: { year: number; month: number }) => {
-    setSelectedMonth(monthData.month - 1); 
+    setSelectedMonth(monthData.month - 1);
     setSelectedYear(monthData.year);
   };
-  const [newRecord, setNewRecord] = useState<{
-    userId: string;
-    vaccineName: string;
-    date: string;
-    time: string;
-    location: string;
-    dose: string;
-  }>({
-    userId: "1",
-    vaccineName: "",
-    date: new Date().toISOString().split("T")[0],
-    time: "12:00 PM",
-    location: "",
-    dose: "1st dose",
-  });
+  // const [newRecord, setNewRecord] = useState<{
+  //   userId: string;
+  //   vaccineName: string;
+  //   date: string;
+  //   time: string;
+  //   location: string;
+  //   dose: string;
+  // }>({
+  //   userId: "1",
+  //   vaccineName: "",
+  //   date: new Date().toISOString().split("T")[0],
+  //   time: "12:00 PM",
+  //   location: "",
+  //   dose: "1st dose",
+  // });
 
-  const addVaccineRecord = () => {
-    const selectedUser = users.find((user) => user.id === newRecord.userId);
+  // const addVaccineRecord = () => {
+  //   const selectedUser = users.find((user) => user.id === newRecord.userId);
 
-    if (selectedUser) {
-      const newVaccineRecord: VaccineRecord = {
-        id: Date.now().toString(),
-        userId: selectedUser.id,
-        userName: selectedUser.name,
-        userColor: selectedUser.color,
-        vaccineName: newRecord.vaccineName,
-        date: newRecord.date,
-        time: newRecord.time,
-        location: newRecord.location,
-        dose: newRecord.dose,
-      };
+  //   if (selectedUser) {
+  //     const newVaccineRecord: VaccineRecord = {
+  //       id: Date.now().toString(),
+  //       userId: selectedUser.id,
+  //       userName: selectedUser.name,
+  //       userColor: selectedUser.color,
+  //       vaccineName: newRecord.vaccineName,
+  //       date: newRecord.date,
+  //       time: newRecord.time,
+  //       location: newRecord.location,
+  //       dose: newRecord.dose,
+  //     };
 
-      setVaccineRecords([...vaccineRecords, newVaccineRecord]);
-      setAddRecordVisible(false);
+  //     setVaccineRecords([...vaccineRecords, newVaccineRecord]);
+  //     setAddRecordVisible(false);
 
-      // Reset new record form
-      setNewRecord({
-        userId: "1",
-        vaccineName: "",
-        date: new Date().toISOString().split("T")[0],
-        time: "12:00 PM",
-        location: "",
-        dose: "1st dose",
-      });
-    }
-  };
+  //     // Reset new record form
+  //     setNewRecord({
+  //       userId: "1",
+  //       vaccineName: "",
+  //       date: new Date().toISOString().split("T")[0],
+  //       time: "12:00 PM",
+  //       location: "",
+  //       dose: "1st dose",
+  //     });
+  //   }
+  // };
 
-  const [value, setValue] = useState(null);
-  const [isFocus, setIsFocus] = useState(false);
   // const navigation = useNavigation();
 
   return (
@@ -217,35 +298,47 @@ const Tracker = () => {
         <View style={styles.container}>
           <View style={styles.header}>
             <Text style={styles.headerText}>Tracker</Text>
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={styles.addButton}
               onPress={() => setAddRecordVisible(true)}
             >
               <Plus width={24} height={24} stroke="#fff" />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
 
           <Calendar
             current={currentCalendarDate}
             markedDates={getMarkedDates()}
-            markingType="multi-dot" 
+            markingType="multi-dot"
             onDayPress={handleDateSelect}
             onMonthChange={handleMonthChange}
             renderHeader={(date: string) => {
               const months = [
-                "January", "February", "March", "April", "May", "June",
-                "July", "August", "September", "October", "November", "December"
+                "January",
+                "February",
+                "March",
+                "April",
+                "May",
+                "June",
+                "July",
+                "August",
+                "September",
+                "October",
+                "November",
+                "December",
               ];
               const d = new Date(date);
               return (
-                <Text style={{ fontSize: 18, fontWeight: "bold", color: "#008B8B" }}>
+                <Text
+                  style={{ fontSize: 18, fontWeight: "bold", color: "#008B8B" }}
+                >
                   {months[d.getMonth()]} {d.getFullYear()}
                 </Text>
               );
             }}
             theme={{
               arrowColor: "#008B8B",
-              dotColor: "#008B8B", 
+              dotColor: "#008B8B",
               todayDotColor: "#FF9800",
             }}
           />
@@ -253,41 +346,95 @@ const Tracker = () => {
           {/* Records List */}
           <View style={styles.recordsContainer}>
             <Text style={styles.recordsTitle}>
-              {`Records for ${dayjs(selectedDate || dayjs().format("YYYY-MM-DD")).format("DD MMMM YYYY")}`}
+              {`Records for ${dayjs(
+                selectedDate || dayjs().format("YYYY-MM-DD")
+              ).format("dddd, DD MMMM YYYY")}`}
             </Text>
 
-            <FlatList
-              data={filteredRecords}
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.recordCard}
-                  onPress={() => router.push("/detail_records")}
-                >
-                  {/* Baris 1: Profile & Nama */}
-                  <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
+            {filteredRecords?.length == 0 ? (
+              <Text style={styles.cardInfoText}>
+                No Appointments on this Date
+              </Text>
+            ) : (
+              <FlatList
+                data={filteredRecords}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item, index }) => (
+                  <TouchableOpacity
+                    style={styles.recordCard}
+                    onPress={() =>
+                      router.push({
+                        pathname: "/booking_summary",
+                        params: {
+                          appointmentId: item.id,
+                          appointedUserId: activeAccount?.userList
+                            .filter((user) =>
+                              user.scheduledAppointments.some(
+                                (app) => app.id === item.id
+                              )
+                            )
+                            .map((user) => user.id),
+                          isResultScreen: "false",
+                        },
+                      })
+                    }
+                  >
+                    {/* Baris 1: Profile & Nama */}
                     <View
-                      style={[
-                        styles.userIndicator,
-                        { backgroundColor: item.userColor },
-                      ]}
-                    />
-                    <Text style={styles.recordTitle}>{item.userName}</Text>
-                  </View>
-                  {/* Baris 2: Nama Vaksin */}
-                  <Text style={styles.recordUser}>{item.vaccineName}</Text>
-                  {/* Baris 3: Tanggal & waktu, lokasi */}
-                  <View style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}>
-                    <Text style={styles.cardInfoText}>
-                      {dayjs(item.date).format("DD MMM YYYY")} • {item.time}
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        marginBottom: 4,
+                      }}
+                    >
+                      <View
+                        style={[
+                          styles.userIndicator,
+                          {
+                            backgroundColor:
+                              userColors[index % userColors.length],
+                          },
+                        ]}
+                      />
+                      <Text style={styles.recordTitle}>
+                        {activeAccount?.userList
+                          .filter((user) =>
+                            user.scheduledAppointments.some(
+                              (app) => app.id === item.id
+                            )
+                          )
+                          .map((user) => user.fullName)}
+                      </Text>
+                    </View>
+                    {/* Baris 2: Nama Vaksin */}
+                    <Text style={styles.recordUser}>
+                      {item.vaccine.vaccineName}
                     </Text>
-                    <Text style={[styles.cardInfoText, { color: "#008B8B", marginLeft: 8 }]}>
-                      {item.location}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              )}
-            />
+                    {/* Baris 3: Tanggal & waktu, lokasi */}
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        marginTop: 4,
+                      }}
+                    >
+                      <Text style={styles.cardInfoText}>
+                        {dayjs(item.scheduledDate).format("DD MMM YYYY")} •{" "}
+                        {item.scheduledTime}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.cardInfoText,
+                          { color: "#008B8B", marginLeft: 8 },
+                        ]}
+                      >
+                        {item.clinic.name}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                )}
+              />
+            )}
           </View>
 
           {/* Month Picker Modal */}
@@ -383,7 +530,7 @@ const Tracker = () => {
           </Modal>
 
           {/* Add Record Modal */}
-          <Modal
+          {/* <Modal
             animationType="slide"
             transparent={true}
             visible={addRecordVisible}
@@ -402,7 +549,7 @@ const Tracker = () => {
                   <Text style={styles.formLabel}>Vaccinant</Text>
                   <View>
                     <Dropdown
-                      data={users}
+                      data={activeAccount?.userList ?? []}
                       labelField="name"
                       valueField="id"
                       value={value}
@@ -417,7 +564,6 @@ const Tracker = () => {
                     />
                   </View>
 
-                  {/* Vaccine Name */}
                   <Text style={styles.formLabel}>Vaccine Name</Text>
                   <TextInput
                     style={styles.textInput}
@@ -428,7 +574,6 @@ const Tracker = () => {
                     placeholder="Enter vaccine name"
                   />
 
-                  {/* Date */}
                   <Text style={styles.formLabel}>Date</Text>
                   <TextInput
                     style={styles.textInput}
@@ -439,7 +584,6 @@ const Tracker = () => {
                     placeholder="YYYY-MM-DD"
                   />
 
-                  {/* Time */}
                   <Text style={styles.formLabel}>Time</Text>
                   <TextInput
                     style={styles.textInput}
@@ -450,7 +594,6 @@ const Tracker = () => {
                     placeholder="Enter time"
                   />
 
-                  {/* Location */}
                   <Text style={styles.formLabel}>Location</Text>
                   <TextInput
                     style={styles.textInput}
@@ -461,7 +604,6 @@ const Tracker = () => {
                     placeholder="Enter location"
                   />
 
-                  {/* Dose */}
                   <Text style={styles.formLabel}>Dose</Text>
                   <View style={styles.dosePicker}>
                     {["1st dose", "2nd dose", "3rd dose", "Booster"].map(
@@ -497,12 +639,347 @@ const Tracker = () => {
                 </ScrollView>
               </View>
             </View>
-          </Modal>
+          </Modal> */}
         </View>
       </SafeAreaView>
     </GestureHandlerRootView>
   );
 };
+
+export interface IAddRecordModalProps {
+  open: boolean;
+  setOpen: (bool: boolean) => void;
+}
+
+export interface IViewRecordModalProps {
+  open: boolean;
+  setOpen: (bool: boolean) => void;
+  record: IVaccinationHistory;
+}
+
+export function AddRecordModal(props: IAddRecordModalProps) {
+  const { activeAccount, activeUser, switchAccount, switchUser } =
+    useActiveSession();
+  const { vaccineList } = useVaccineList();
+  // const [addRecordVisible, setAddRecordVisible] = useState(false);
+  const [value, setValue] = useState(null);
+  const [isFocus, setIsFocus] = useState(false);
+
+  const [newRecord, setNewRecord] = useState({
+    accountId: activeAccount?.id,
+    userId: "",
+    vaccineId: "",
+    selectedDate: "",
+    location: "",
+    doseNumber: 1,
+  });
+
+  const handleSave = () => {
+    const req: IVaccinationHistory = {
+      id: "",
+      vaccine: vaccineList.filter((v) => v.id == newRecord.vaccineId)[0],
+      vaccinationDate: new Date(newRecord.selectedDate),
+      doseNumber: newRecord.doseNumber,
+      certificateUri: "",
+    };
+    // console.log(req);
+    addVaccinationHistory(activeAccount?.id ?? "", newRecord.userId, req).then(
+      (user) => {
+        switchAccount(user);
+        const act = user.userList.find((u) => u.id == activeUser?.id);
+        if (act) {
+          switchUser(act);
+        }
+
+        props.setOpen(false);
+      }
+    );
+  };
+
+  return (
+    <>
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={props.open}
+        onRequestClose={() => props.setOpen(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Add Vaccine Record</Text>
+              <TouchableOpacity onPress={() => props.setOpen(false)}>
+                <X width={24} height={24} stroke="#000" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.formContainer}>
+              <Text style={styles.formLabel}>Vaccinant</Text>
+              <View>
+                <Dropdown
+                  data={activeAccount?.userList ?? []}
+                  labelField="fullName"
+                  valueField="id"
+                  value={newRecord.userId}
+                  onFocus={() => setIsFocus(true)}
+                  onBlur={() => setIsFocus(false)}
+                  onChange={(item: IUser) => {
+                    setNewRecord({ ...newRecord, userId: item.id });
+                    // setValue(item.id);
+                    setIsFocus(false);
+                  }}
+                  placeholder={!isFocus ? "Choose Recipient" : "..."}
+                  style={styles.dropdown}
+                />
+              </View>
+
+              <Text style={styles.formLabel}>Vaccine</Text>
+              <Dropdown
+                data={vaccineList}
+                labelField="vaccineName"
+                valueField="id"
+                value={newRecord.vaccineId}
+                placeholder={!isFocus ? "Choose Vaccine" : "..."}
+                style={styles.dropdown}
+                onFocus={() => setIsFocus(true)}
+                onBlur={() => setIsFocus(false)}
+                onChange={(item: IVaccine) => {
+                  setNewRecord({ ...newRecord, vaccineId: item.id });
+                  setIsFocus(false);
+                }}
+              />
+              {/* <TextInput
+                style={styles.textInput}
+                value={newRecord.vaccineName}
+                onChangeText={(text) =>
+                  setNewRecord({ ...newRecord, vaccineName: text })
+                }
+                placeholder="Enter vaccine name"
+              /> */}
+
+              <Text style={styles.formLabel}>Date</Text>
+              <TextInput
+                style={styles.textInput}
+                value={newRecord.selectedDate}
+                onChangeText={(text) =>
+                  setNewRecord({ ...newRecord, selectedDate: text })
+                }
+                placeholder="YYYY-MM-DD"
+              />
+
+              {/* <Text style={styles.formLabel}>Time</Text>
+              <TextInput
+                style={styles.textInput}
+                value={newRecord.time}
+                onChangeText={(text) =>
+                  setNewRecord({ ...newRecord, time: text })
+                }
+                placeholder="Enter time"
+              /> */}
+
+              <Text style={styles.formLabel}>Location</Text>
+              <TextInput
+                style={styles.textInput}
+                value={newRecord.location}
+                onChangeText={(text) =>
+                  setNewRecord({ ...newRecord, location: text })
+                }
+                placeholder="Enter location"
+              />
+
+              {/* <Text style={styles.formLabel}>Dose</Text>
+              <View style={styles.dosePicker}>
+                {vaccineList.filter((v)=>v.id == newRecord.vaccineId)[0].doses .map((dose) => (
+                  <TouchableOpacity
+                    key={dose}
+                    style={[
+                      styles.doseOption,
+                      newRecord.dose === dose && styles.selectedOption,
+                    ]}
+                    onPress={() => setNewRecord({ ...newRecord, dose })}
+                  >
+                    <Text
+                      style={
+                        newRecord.dose === dose
+                          ? styles.selectedOptionText
+                          : styles.optionText
+                      }
+                    >
+                      {dose}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View> */}
+
+              <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+                <Text style={styles.saveButtonText}>Save Record</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+    </>
+  );
+}
+
+export function ViewRecordModal(props: IViewRecordModalProps) {
+  const { activeAccount, activeUser, switchAccount, switchUser } =
+    useActiveSession();
+  const { vaccineList } = useVaccineList();
+
+  const downloadImage = async (uri: string) => {
+    // Request permission to access media library
+    const { status } = await MediaLibrary.requestPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Permission denied", "Cannot save image without permission.");
+      return;
+    }
+
+    try {
+      // Download the image to a temporary local file
+      const id = uuid.v4();
+      const fileName = `immunify_cert_${id.toString()}.jpg`;
+      const fileUri = FileSystem.documentDirectory + fileName;
+      const downloadRes = await FileSystem.downloadAsync(uri, fileUri);
+
+      // Save to gallery
+      const asset = await MediaLibrary.createAssetAsync(downloadRes.uri);
+      await MediaLibrary.createAlbumAsync("Immunify", asset, false);
+
+      Alert.alert("Success", "Image saved to gallery!");
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Error", "Failed to download image");
+    }
+  };
+
+  return (
+    <>
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={props.open}
+        onRequestClose={() => props.setOpen(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Vaccine Record</Text>
+              <TouchableOpacity onPress={() => props.setOpen(false)}>
+                <X width={24} height={24} stroke="#000" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.formContainer}>
+              <Text style={styles.formLabel}>Vaccinant</Text>
+              <TextInput
+                editable={false}
+                style={styles.textInput}
+                value={activeUser?.fullName}
+              />
+
+              <Text style={styles.formLabel}>Vaccine</Text>
+              <TextInput
+                editable={false}
+                style={styles.textInput}
+                value={props.record.vaccine.vaccineName}
+              />
+              {/* <TextInput
+                style={styles.textInput}
+                value={newRecord.vaccineName}
+                onChangeText={(text) =>
+                  setNewRecord({ ...newRecord, vaccineName: text })
+                }
+                placeholder="Enter vaccine name"
+              /> */}
+
+              <Text style={styles.formLabel}>Date</Text>
+              <TextInput
+                editable={false}
+                style={styles.textInput}
+                value={dayjs(props.record.vaccinationDate).format(
+                  "dddd, DD MMMM YYYY"
+                )}
+              />
+              {/* <Text style={styles.formLabel}>Time</Text>
+              <TextInput
+                style={styles.textInput}
+                value={newRecord.time}
+                onChangeText={(text) =>
+                  setNewRecord({ ...newRecord, time: text })
+                }
+                placeholder="Enter time"
+              /> */}
+
+              <Text style={styles.formLabel}>Dose Number</Text>
+              <TextInput
+                editable={false}
+                style={styles.textInput}
+                value={props.record.doseNumber.toString()}
+              />
+
+              {props.record.certificateUri != "" && (
+                <>
+                  <Text style={styles.formLabel}>Certificate</Text>
+                  <Image
+                    source={
+                      props.record.certificateUri != ""
+                        ? { uri: props.record.certificateUri }
+                        : require("../../assets/icons/logo.png")
+                    }
+                    style={styles.certificateImage}
+                  />
+
+                  <PrimaryButton
+                    style={styles.primaryBtn}
+                    onPress={() => downloadImage(props.record.certificateUri)}
+                    title="Download Certificate"
+                  />
+                </>
+              )}
+              {/* <TextInput
+               editable={false}
+                style={styles.textInput}
+                value={props.record.doseNumber.toString()}
+              /> */}
+
+              {/* <Text style={styles.formLabel}>Dose</Text>
+              <View style={styles.dosePicker}>
+                {vaccineList.filter((v)=>v.id == newRecord.vaccineId)[0].doses .map((dose) => (
+                  <TouchableOpacity
+                    key={dose}
+                    style={[
+                      styles.doseOption,
+                      newRecord.dose === dose && styles.selectedOption,
+                    ]}
+                    onPress={() => setNewRecord({ ...newRecord, dose })}
+                  >
+                    <Text
+                      style={
+                        newRecord.dose === dose
+                          ? styles.selectedOptionText
+                          : styles.optionText
+                      }
+                    >
+                      {dose}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View> */}
+
+              {/* <TouchableOpacity
+                style={styles.saveButton}
+                onPress={handleSave}
+              >
+                <Text style={styles.saveButtonText}>Save Record</Text>
+              </TouchableOpacity> */}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+    </>
+  );
+}
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -517,7 +994,7 @@ const styles = StyleSheet.create({
     flex: 1,
     // backgroundColor: '#f5f5f5',
     paddingHorizontal: 16,
-    paddingTop: 16,
+    paddingTop: 40,
   },
   header: {
     flexDirection: "row",
@@ -565,13 +1042,11 @@ const styles = StyleSheet.create({
   recordHeader: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between"
+    justifyContent: "space-between",
   },
-  userRecordHeader:{
+  userRecordHeader: {
     flexDirection: "row",
-    
-  }
-  ,
+  },
   userIndicator: {
     width: 12,
     height: 12,
@@ -766,6 +1241,17 @@ const styles = StyleSheet.create({
     color: "#008B8B",
     fontSize: 13,
     marginTop: 2,
+  },
+  primaryBtn: {
+    width: "100%",
+    marginTop: 36,
+    fontWeight: "500",
+  },
+  certificateImage: {
+    width: 350,
+    height: 200,
+    // marginRight: 16,
+    // borderRadius: 4,
   },
 });
 

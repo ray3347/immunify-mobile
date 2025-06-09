@@ -14,8 +14,9 @@ import { useRouter } from "expo-router";
 import SearchInput from "../../components/SearchInput";
 import HttpService from "../../constants/HttpService";
 import { IVaccine } from "../../interfaces/db/IVaccine";
-import { useVaccineList } from "../../utilities/zustand";
+import { useUserLocation, useVaccineList } from "../../utilities/zustand";
 import { IApiResult } from "../../interfaces/api";
+import { fetchVaccines } from "../../utilities/api/vaccines";
 
 // Define the types for your data structures
 // type RelatedDisease = {
@@ -81,41 +82,21 @@ import { IApiResult } from "../../interfaces/api";
 
 const Vaccines = () => {
   const router = useRouter();
-  const {vaccineList, setVaccineList} = useVaccineList();
+  const { vaccineList, setVaccineList } = useVaccineList();
   // const [cardData, setCardData] = useState<IVaccine[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const { latitude, longtitude } = useUserLocation();
 
   useEffect(() => {
-    const fetchVaccines = async () => {
-      try {
-        setLoading(true);
-        const res = await HttpService.get<{ data: IVaccine[] }>("/wiki/vaccine");
-        
-        HttpService.get("/wiki/vaccine")
-        .then((res: IApiResult<IVaccine[]>)=>{
-          setVaccineList(res.data.data)
-          setLoading(false);
-        })
-        // setCardData(res.data.data);
-        
-      } catch (error) {
-        console.error("Failed to fetch vaccine data", error);
-        // Use fallback data when API fails
-        
-        Alert.alert(
-          "Connection Error",
-          "Could not connect to server. Showing sample data instead.",
-          [{ text: "OK" }]
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if(vaccineList.length == 0){
-
-      fetchVaccines();
+    if (vaccineList.length == 0) {
+      setLoading(true);
+      fetchVaccines(latitude ?? "", longtitude ?? "").then((res) => {
+        if (res) {
+          setVaccineList(res);
+        }
+      });
+      setLoading(false);
     }
   }, []);
 
@@ -123,19 +104,21 @@ const Vaccines = () => {
     // Navigate with vaccine data
     router.push({
       pathname: "/vaccine_detail",
-      params: { vaccineId: vaccine.id }
+      params: { vaccineId: vaccine.id },
     });
   };
 
-  const filteredVaccines =  vaccineList.filter(vaccine =>
-    searchQuery !== "" ? vaccine.vaccineName.toLowerCase().includes(searchQuery.toLowerCase()) : vaccine
+  const filteredVaccines = vaccineList.filter((vaccine) =>
+    searchQuery !== ""
+      ? vaccine.vaccineName.toLowerCase().includes(searchQuery.toLowerCase())
+      : vaccine
   );
 
   const renderHeader = () => (
     <View style={{ marginBottom: 16 }}>
-      <SearchInput 
-        placeholder="Search Vaccine" 
-        onChangeText={text => setSearchQuery(text)}
+      <SearchInput
+        placeholder="Search Vaccine"
+        onChangeText={(text) => setSearchQuery(text)}
         value={searchQuery}
       />
     </View>
@@ -166,12 +149,16 @@ const Vaccines = () => {
             ListEmptyComponent={renderEmptyList}
             renderItem={({ item }) => (
               <VaccineCard
-                image={item.image != "" ? {uri: item.image}  : require( "../../assets/images/vaccine.png")}
+                image={
+                  item.image != ""
+                    ? { uri: item.image }
+                    : require("../../assets/images/vaccine.png")
+                }
                 title={item.vaccineName}
                 location={item.informationSummary[0]}
                 // location={item.relatedDiseases?.[0]?.name ?? "General Vaccine"}
                 distance={"Available"}
-                price={item.price} 
+                price={item.price}
                 onPress={() => handleVaccinePress(item)}
               />
             )}

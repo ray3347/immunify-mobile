@@ -1,8 +1,21 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
-import React, { useState } from "react";
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Linking,
+} from "react-native";
+import React, { useEffect, useMemo, useState } from "react";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import PrimaryButton from "../components/PrimaryButton";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useVaccineList } from "../utilities/zustand";
+import { IVaccine } from "../interfaces/db/IVaccine";
+import { IClinic } from "../interfaces/db/IClinic";
+import { Calendar, DateData } from "react-native-calendars";
+import dayjs from "dayjs";
+import { getClinicAvailableTime } from "../utilities/api/appointment";
 
 type TimeSlot = {
   time: string;
@@ -47,41 +60,158 @@ const dummyTimeSlots: SlotsData = {
 };
 
 const BookClinic = () => {
-  const [selectedDay, setSelectedDay] = useState("Today");
+  // const [selectedDay, setSelectedDay] = useState("Today");
   const [selectedTime, setSelectedTime] = useState("");
-    const router = useRouter();
-  const timeSlotsForSelectedDay = dummyTimeSlots[selectedDay] || [];
+  const router = useRouter();
+  const { vaccineList } = useVaccineList();
+  const [activeVaccine, setActiveVaccine] = useState<IVaccine>();
+  const [activeClinic, setActiveClinic] = useState<IClinic>();
+  const { clinicId, vaccineId } = useLocalSearchParams();
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
-  const goToBookAppointment = () => router.push("/set_appointment");
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const [selectedDate, setSelectedDate] = useState<string>(
+    dayjs().format("YYYY-MM-DD")
+  );
+  const [timeslots, setTimeslots] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (selectedDate) {
+      getClinicAvailableTime(
+        typeof clinicId == "string" ? clinicId : "",
+        selectedDate
+      ).then((res) => {
+        setTimeslots(res);
+      });
+    }
+  }, [selectedDate]);
+
+  const getMarkedDates = () => {
+    const marked: any = {};
+
+    if (selectedDate) {
+      marked[selectedDate] = {
+        ...(marked[selectedDate] || {}),
+        selected: true,
+        selectedColor: "#008B8B",
+      };
+    }
+
+    const today = dayjs().format("YYYY-MM-DD");
+    if (today !== selectedDate) {
+      marked[today] = {
+        ...(marked[today] || {}),
+        customStyles: {
+          container: {
+            borderWidth: 2,
+            borderColor: "#FF9800",
+            borderRadius: 20,
+            backgroundColor: "#FFF8E1",
+          },
+          text: {
+            color: "#FF9800",
+            fontWeight: "bold",
+          },
+        },
+        today: true,
+      };
+    }
+
+    return marked;
+  };
+
+  const currentCalendarDate = `${selectedYear}-${String(
+    selectedMonth + 1
+  ).padStart(2, "0")}-01`;
+
+  const handleDateSelect = (day: DateData) => {
+    setSelectedDate(day.dateString);
+  };
+
+  const handleMonthChange = (monthData: { year: number; month: number }) => {
+    setSelectedMonth(monthData.month - 1);
+    setSelectedYear(monthData.year);
+  };
+
+  const tomorrow = useMemo(() => {
+    const date = new Date();
+    date.setDate(date.getDate() + 1);
+    return date.toISOString().split("T")[0]; // Format: YYYY-MM-DD
+  }, []);
+
+  useEffect(() => {
+    const vaccine = vaccineList.find((v) => v.id == vaccineId);
+    if (vaccine) {
+      setActiveVaccine(vaccine);
+      const clinic = vaccine.availableAt.find((c) => c.id == clinicId);
+      if (clinic) {
+        setActiveClinic(clinic);
+      }
+    }
+  }, []);
+  // const timeSlotsForSelectedDay = dummyTimeSlots[selectedDay] || [];
+
+  const goToBookAppointment = () => {
+    if (selectedTime != "") {
+      router.push({
+        pathname: "/set_appointment",
+        params: {
+          vaccineId: vaccineId,
+          clinicId: clinicId,
+          date: selectedDate,
+          time: selectedTime,
+        },
+      });
+    }
+  };
 
   return (
     <ScrollView style={styles.scrollContainer}>
       <View style={styles.container}>
         {/* Clinic Info */}
         <View style={styles.card}>
-          <Text style={styles.headingText}>{dummyClinicInfo.name}</Text>
-          <Text style={styles.bodyText}>{dummyClinicInfo.address}</Text>
+          <Text style={styles.headingText}>{activeClinic?.name}</Text>
+          <Text style={styles.bodyText}>{activeClinic?.address}</Text>
 
           <View style={[styles.centeredRow, styles.mt8]}>
             <Ionicons name="location-outline" size={16} color="#008B8B" />
             <Text style={[styles.smallText, styles.accentText]}>
-              {dummyClinicInfo.distance} km
+              {activeClinic?.distanceFromUser} km
             </Text>
           </View>
 
           <View style={[styles.row, styles.mt16]}>
             <TouchableOpacity
-              style={[styles.button, styles.outlineButton, styles.flex1, styles.mr8]}
+              style={[
+                styles.button,
+                styles.outlineButton,
+                styles.flex1,
+                styles.mr8,
+              ]}
+              onPress={() => {
+                Linking.openURL(activeClinic?.websiteURL ?? "").catch((err) =>
+                  console.error("Failed to open URL:", err)
+                );
+              }}
             >
-              <Ionicons name="call-outline" size={18} color="#008B8B" />
-              <Text style={[styles.buttonText, styles.outlineButtonText]}>Call</Text>
+              <Ionicons name="globe-outline" size={18} color="#008B8B" />
+              <Text style={[styles.buttonText, styles.outlineButtonText]}>
+                Website
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={[styles.button, styles.outlineButton, styles.flex1]}
+              onPress={() => {
+                Linking.openURL(activeClinic?.googleMapsURL ?? "").catch(
+                  (err) => console.error("Failed to open URL:", err)
+                );
+              }}
             >
               <Ionicons name="navigate-outline" size={18} color="#008B8B" />
-              <Text style={[styles.buttonText, styles.outlineButtonText]}>Directions</Text>
+              <Text style={[styles.buttonText, styles.outlineButtonText]}>
+                Directions
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -91,8 +221,8 @@ const BookClinic = () => {
           <View style={styles.sectionContainer}>
             <Text style={styles.sectionTitle}>Available Time Slots</Text>
 
-            <View style={[styles.row, styles.mt12]}>
-              {dummyDays.map((day) => (
+            <View style={[styles.row, styles.mt12, styles.centeredRow]}>
+              {/* {dummyDays.map((day) => (
                 <TouchableOpacity
                   key={day}
                   style={[
@@ -113,26 +243,67 @@ const BookClinic = () => {
                     {day}
                   </Text>
                 </TouchableOpacity>
-              ))}
+              ))} */}
+              <Calendar
+                minDate={tomorrow}
+                markedDates={getMarkedDates()}
+                current={currentCalendarDate}
+                markingType="multi-dot"
+                onDayPress={handleDateSelect}
+                onMonthChange={handleMonthChange}
+                renderHeader={(date: string) => {
+                  const months = [
+                    "January",
+                    "February",
+                    "March",
+                    "April",
+                    "May",
+                    "June",
+                    "July",
+                    "August",
+                    "September",
+                    "October",
+                    "November",
+                    "December",
+                  ];
+                  const d = new Date(date);
+                  return (
+                    <Text
+                      style={{
+                        fontSize: 18,
+                        fontWeight: "bold",
+                        color: "#008B8B",
+                      }}
+                    >
+                      {months[d.getMonth()]} {d.getFullYear()}
+                    </Text>
+                  );
+                }}
+                theme={{
+                  arrowColor: "#008B8B",
+                  dotColor: "#008B8B",
+                  todayDotColor: "#FF9800",
+                }}
+              />
             </View>
 
             <View style={styles.timeSlotGrid}>
-              {timeSlotsForSelectedDay.map((slot, index) => (
+              {timeslots.map((slot, index) => (
                 <TouchableOpacity
                   key={index}
                   style={[
                     styles.timeSlot,
-                    selectedTime === slot.time && styles.selectedTimeSlot,
+                    selectedTime === slot && styles.selectedTimeSlot,
                   ]}
-                  onPress={() => setSelectedTime(slot.time)}
+                  onPress={() => setSelectedTime(slot)}
                 >
                   <Text
                     style={[
                       styles.timeSlotText,
-                      selectedTime === slot.time && styles.selectedTimeSlotText,
+                      selectedTime === slot && styles.selectedTimeSlotText,
                     ]}
                   >
-                    {slot.time}
+                    {slot}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -144,23 +315,39 @@ const BookClinic = () => {
         <View style={styles.card}>
           <View style={styles.sectionContainer}>
             <Text style={styles.sectionTitle}>Clinic Details</Text>
-            
+
             {/* Working Hours */}
             <View style={[styles.detailItem, styles.mt12]}>
-              <Ionicons name="time-outline" size={20} color="#008B8B" style={styles.detailIcon} />
+              <Ionicons
+                name="time-outline"
+                size={20}
+                color="#008B8B"
+                style={styles.detailIcon}
+              />
               <View>
                 <Text style={styles.titleText}>Working Hours</Text>
-                <Text style={styles.bodyText}>{dummyClinicInfo.workingHours.weekdays}</Text>
-                <Text style={styles.bodyText}>{dummyClinicInfo.workingHours.weekend}</Text>
+                <Text style={styles.bodyText}>
+                  {activeClinic?.openTime} - {activeClinic?.closeTime}
+                </Text>
+                {/* <Text style={styles.bodyText}>
+                  {dummyClinicInfo.workingHours.weekend}
+                </Text> */}
               </View>
             </View>
 
             {/* Payment Methods */}
             <View style={[styles.detailItem, styles.mt16]}>
-              <MaterialCommunityIcons name="credit-card-outline" size={20} color="#008B8B" style={styles.detailIcon} />
+              <MaterialCommunityIcons
+                name="credit-card-outline"
+                size={20}
+                color="#008B8B"
+                style={styles.detailIcon}
+              />
               <View>
                 <Text style={styles.titleText}>Payment Methods</Text>
-                <Text style={styles.bodyText}>{dummyClinicInfo.paymentMethods.join(", ")}</Text>
+                <Text style={styles.bodyText}>
+                  {dummyClinicInfo.paymentMethods.join(", ")}
+                </Text>
               </View>
             </View>
           </View>
@@ -378,12 +565,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     width: "100%",
   },
-  primaryBtn:{
+  primaryBtn: {
     width: "100%",
     marginTop: 36,
     bottom: 36,
     fontWeight: "500",
-  }
+  },
 });
 
 export default BookClinic;

@@ -15,8 +15,9 @@ import { images } from "../constants";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import HttpService from "../constants/HttpService";
-import { useActiveSession } from "../utilities/zustand";
+import { useActiveSession, useUserLocation } from "../utilities/zustand";
 import { getUserById } from "../utilities/api/user";
+import * as Location from "expo-location";
 
 const { width } = Dimensions.get("window");
 
@@ -44,7 +45,8 @@ export default function Onboarding() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
   const router = useRouter();
-  const { activeAccount, switchAccount } = useActiveSession();
+  const { activeAccount, switchAccount, switchUser } = useActiveSession();
+  const { latitude, longtitude, setUserLocation } = useUserLocation();
 
   useEffect(() => {
     // const ha = fetchVax();
@@ -58,11 +60,50 @@ export default function Onboarding() {
     // })
     // ;
     // console.log("babi", ha)
-    const accountId = AsyncStorage.getItem("accountId").then(async (res) => {
+    Location.getForegroundPermissionsAsync().then(async (x) => {
+      // if (x.status == "granted") {
+      //   const pos = await Location.getCurrentPositionAsync();
+      //   console.log(pos);
+      //   setUserLocation(
+      //     pos.coords.latitude.toString(),
+      //     pos.coords.longitude.toString()
+      //   );
+      // }
+      console.log('adasdadsasdada', x)
+      const pos = await Location.getCurrentPositionAsync({});
+        console.log(pos);
+        setUserLocation(
+          pos.coords.latitude.toString(),
+          pos.coords.longitude.toString()
+        );
+    });
+    AsyncStorage.getItem("accountId").then(async (res) => {
       if (res) {
         const user = await getUserById(res);
         switchAccount(user);
-        router.replace('/(tabs)/home');
+        const activeUserId = await AsyncStorage.getItem("activeUser");
+        if (activeUserId) {
+          const active = user.userList.find((u) => u.id == activeUserId);
+          if (active) {
+            switchUser(active);
+          }
+        }
+
+        // navigator.geolocation.watchPosition((pos) => {
+        //   console.log("aaaa", pos);
+        //   setUserLocation(
+        //     pos.coords.latitude.toString(),
+        //     pos.coords.longitude.toString()
+        //   );
+        // });
+
+        // setCurrentIndex(onboardingData.length);
+        // await AsyncStorage.setItem("hasSeenOnboarding", "true");
+
+        // router.replace("/(tabs)/home");
+
+        await AsyncStorage.setItem("hasSeenOnboarding", "true");
+        router.replace("/(auth)/log_in");
       }
     });
     // if(activeAccount){
@@ -103,30 +144,38 @@ export default function Onboarding() {
               scrollEnabled={false}
               contentContainerStyle={styles.scrollContent}
             >
-              {onboardingData.map((item, index) => (
-                <View key={index} style={styles.slideItem}>
-                  <Image source={item.image} style={styles.slideImage} />
-                  <Text style={styles.slideTitle}>{item.title}</Text>
-                  <Text style={styles.slideDescription}>
-                    {item.description}
-                  </Text>
-                </View>
-              ))}
+              {currentIndex < onboardingData.length && (
+                <>
+                  {onboardingData.map((item, index) => (
+                    <View key={index} style={styles.slideItem}>
+                      <Image source={item.image} style={styles.slideImage} />
+                      <Text style={styles.slideTitle}>{item.title}</Text>
+                      <Text style={styles.slideDescription}>
+                        {item.description}
+                      </Text>
+                    </View>
+                  ))}
+                </>
+              )}
             </ScrollView>
           </View>
 
           {/* Container for bottom controls with padding */}
           <View style={styles.controlsContainer}>
             <View style={styles.paginationContainer}>
-              {onboardingData.map((_, index) => (
-                <View
-                  key={index}
-                  style={[
-                    styles.paginationDot,
-                    currentIndex === index && styles.paginationDotActive,
-                  ]}
-                />
-              ))}
+              {currentIndex < onboardingData.length && (
+                <>
+                  {onboardingData.map((_, index) => (
+                    <View
+                      key={index}
+                      style={[
+                        styles.paginationDot,
+                        currentIndex === index && styles.paginationDotActive,
+                      ]}
+                    />
+                  ))}
+                </>
+              )}
             </View>
 
             <TouchableOpacity style={styles.nextButton} onPress={handleNext}>

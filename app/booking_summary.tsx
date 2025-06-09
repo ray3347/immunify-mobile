@@ -1,72 +1,118 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useActiveSession } from "../utilities/zustand";
+import { IUserAppointment } from "../interfaces/db/IAppointment";
+import dayjs from "dayjs";
+import { IUser } from "../interfaces/db/IUser";
 
 const BookingSummary = () => {
   const router = useRouter();
+  const { appointmentId, appointedUserId, isResultScreen } =
+    useLocalSearchParams();
+  const { activeAccount } = useActiveSession();
+  const [appUser, setAppUser] = useState<IUser>();
+  const [activeAppointment, setActiveAppointment] =
+    useState<IUserAppointment>();
+
+  useEffect(() => {
+    if (
+      typeof appointedUserId == "string" &&
+      typeof appointmentId == "string"
+    ) {
+      const user = activeAccount?.userList.find((u) => u.id == appointedUserId);
+      if (user) {
+        setAppUser(user);
+        const appointment = user.scheduledAppointments.find(
+          (a) => a.id == appointmentId
+        );
+        if (appointment) {
+          setActiveAppointment(appointment);
+        }
+      }
+    }
+  }, []);
 
   const handleBackToHome = () => {
-    router.replace("/(tabs)/home");
+    typeof isResultScreen == "string" && isResultScreen == "true" ? router.replace("/(tabs)/home") : router.replace("/(tabs)/tracker");
   };
 
-  const summary = {
-    clinic: "Klinik Sehat Sentosa",
-    date: "Apr 26, 2025",
-    time: "10:30 AM",
-    vaccine: "MMR Vaccine",
-    profiles: [
-      { id: "1", name: "Tommy Anderson", age: 12 },
-      { id: "2", name: "Emma Anderson", age: 8 },
-    ],
-  };
+  // const summary = {
+  //   clinic: "Klinik Sehat Sentosa",
+  //   date: "Apr 26, 2025",
+  //   time: "10:30 AM",
+  //   vaccine: "MMR Vaccine",
+  //   profiles: [
+  //     { id: "1", name: "Tommy Anderson", age: 12 },
+  //     { id: "2", name: "Emma Anderson", age: 8 },
+  //   ],
+  // };
 
   return (
     <View style={styles.container}>
       <View style={styles.card}>
         <Image
-          source={require("../assets/icons/clock.png")}
+          source={typeof isResultScreen == "string" && isResultScreen == "true" ? require("../assets/icons/clock.png") : require("../assets/icons/hospital.png")}
           style={styles.icon}
         />
         <Text style={styles.title}>Booking Details</Text>
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>Clinic</Text>
-          <Text style={styles.summaryValue}>{summary.clinic}</Text>
+          <Text style={styles.summaryValue}>
+            {activeAppointment?.clinic.name}
+          </Text>
         </View>
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>Date</Text>
-          <Text style={styles.summaryValue}>{summary.date}</Text>
+          <Text style={styles.summaryValue}>
+            {dayjs(activeAppointment?.scheduledDate ?? new Date()).format(
+              "dddd, DD MMMM YYYY"
+            )}
+          </Text>
         </View>
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>Time</Text>
-          <Text style={styles.summaryValue}>{summary.time}</Text>
+          <Text style={styles.summaryValue}>
+            {activeAppointment?.scheduledTime} -{" "}
+            {activeAppointment?.scheduledEndTime}
+          </Text>
         </View>
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>Vaccine</Text>
-          <Text style={styles.summaryValue}>{summary.vaccine}</Text>
+          <Text style={styles.summaryValue}>
+            {activeAppointment?.vaccine.vaccineName}
+          </Text>
         </View>
         <View style={[styles.summaryRow, { alignItems: "flex-start" }]}>
           <Text style={styles.summaryLabel}>Profiles</Text>
           <View style={{ flex: 1 }}>
-            {summary.profiles.map((profile) => (
-              <Text key={profile.id} style={styles.profileListText}>
-                {profile.name}{" "}
-                <Text style={styles.profileAgeText}>
-                  ({profile.age} yrs)
-                </Text>
-              </Text>
-            ))}
+            <Text style={styles.profileListText}>
+              {appUser?.fullName}{" "}
+              {/* <Text style={styles.profileAgeText}>
+                ({dayjs().diff(dayjs(appUser?.dateOfBirth), "year")} yrs)
+              </Text> */}
+            </Text>
+            {/* {summary.profiles.map((profile) => (
+              
+            ))} */}
           </View>
         </View>
-        <Text style={styles.infoText}>
-          Please wait for verification from the clinic.
-        </Text>
-        <Text style={styles.detailText}>
-          Your booking is being processed. You will receive a notification once
-          your appointment is confirmed.
-        </Text>
+        {typeof isResultScreen == "string" && isResultScreen == "true" ? (
+          <>
+            <Text style={styles.infoText}>
+              Please wait for verification from the clinic.
+            </Text>
+            <Text style={styles.detailText}>
+              Your booking is being processed. You will receive a notification
+              once your appointment is confirmed.
+            </Text>
+          </>
+        ) : (
+          <></>
+        )}
       </View>
       <TouchableOpacity style={styles.primaryBtn} onPress={handleBackToHome}>
-        <Text style={styles.primaryBtnText}>Back to Home</Text>
+        <Text style={styles.primaryBtnText}> {typeof isResultScreen == "string" && isResultScreen == "true" ? 'Back to Home' : 'Back'}</Text>
       </TouchableOpacity>
     </View>
   );

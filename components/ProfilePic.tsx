@@ -7,7 +7,7 @@ interface ProfilePicProps {
   color?: string; // Tambahkan prop color
 }
 
-const ProfilePic: React.FC<ProfilePicProps> = ({ name, size = 48, color = "#5B9BD5" }) => {
+const ProfilePic: React.FC<ProfilePicProps> = ({ name, size = 48, color = "#008B8B" }) => {
   const initials = name
     .split(" ")
     .map((n) => n[0])
@@ -21,7 +21,7 @@ const ProfilePic: React.FC<ProfilePicProps> = ({ name, size = 48, color = "#5B9B
         { width: size, height: size, borderRadius: size / 2, backgroundColor: color },
       ]}
     >
-      <Text style={[styles.initials, { fontSize: size / 2 }]}>{initials}</Text>
+      <Text style={[styles.initials, { fontSize: size / 3 }]}>{initials}</Text>
     </View>
   );
 };

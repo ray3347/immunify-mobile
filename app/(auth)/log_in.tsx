@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, BackHandler } from "react-native";
 import {
   GestureHandlerRootView,
   ScrollView,
@@ -24,6 +24,13 @@ const Login = () => {
 
   const [form, setForm] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({ email: "", password: "" });
+
+   useEffect(() => {
+    // Disable Android back button
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => true);
+
+    return () => backHandler.remove();
+  }, []);
 
   useEffect(()=>{
     if(activeAccount){

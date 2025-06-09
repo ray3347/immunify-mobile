@@ -1,60 +1,88 @@
-import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  Modal,
+} from "react-native";
 import {
   GestureHandlerRootView,
   ScrollView,
 } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 import TabBar from "../../components/TabBar";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import ProfilePic from "../../components/ProfilePic";
 import InfoCard from "../../components/InfoCard";
 import Label from "../../components/Label";
-import { useActiveSession } from "../../utilities/zustand";
+import {
+  useActiveSession,
+  useRecommendedVaccineList,
+  useUserLocation,
+  useVaccineList,
+} from "../../utilities/zustand";
 import dayjs from "dayjs";
-import { useRouter } from 'expo-router';
-import SettingsModal from '../../components/SettingsModal';
-import LogoutConfirmationModal from '../../components/LogoutConfirmationModal';
-import ProfileBottomSheet from "../../components/ProfileBottomSheet"; 
+import { useRouter } from "expo-router";
+import SettingsModal from "../../components/SettingsModal";
+import LogoutConfirmationModal from "../../components/LogoutConfirmationModal";
+import ProfileBottomSheet from "../../components/ProfileBottomSheet";
+import { fetchVaccines } from "../../utilities/api/vaccines";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { X } from "react-native-feather";
+import { AddRecordModal, ViewRecordModal } from "./tracker";
+import { IVaccineRecommendation } from "../../interfaces/requests/IVaccineRecommendation";
+import { getRecommendedVaccines } from "../../utilities/api/user";
 
 const icons = {
   cake: require("../../assets/icons/cake.png"),
   female: require("../../assets/icons/female.png"),
   certif: require("../../assets/icons/certif.png"),
-
 };
 const Profile = () => {
-  const {activeUser, setActiveUser, setActiveAccount} = useActiveSession();
+  const { activeAccount, activeUser, switchUser, switchAccount } =
+    useActiveSession();
+  const { recommendedList, setRecommendedList } = useRecommendedVaccineList();
   const [activeTab, setActiveTab] = useState("completed vaccination");
   const router = useRouter();
   const [showSettings, setShowSettings] = useState(false);
   const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
   const [showProfileSheet, setShowProfileSheet] = useState(false);
-  const [profiles, setProfiles] = useState([
-    {
-      id: "1",
-      name: "John Doe",
-      color: "#5B9BD5",
-      selected: true,
-      gender: "male",
-      dateOfBirth: "1990-01-01",
-    },
-    {
-      id: "2",
-      name: "Jane Smith",
-      color: "#F08A9B",
-      selected: false,
-      gender: "female",
-      dateOfBirth: "1992-05-15",
-    },
-  ]);
+  const [viewRecordVisible, setViewRecordVisible] = useState(false);
+  const [addRecordVisible, setAddRecordVisible] = useState(false);
+  // const [recommendedVaccine, setRecommendedVaccine] = useState<
+  //   IVaccineRecommendation[]
+  // >([]);
 
-  const handleProfileToggle = (profileId: string) => {
-    setProfiles((prev) =>
-      prev.map((p) => ({
-        ...p,
-        selected: p.id === profileId,
-      }))
-    );
+  useEffect(() => {
+    if (recommendedList.length == 0) {
+      getRecommendedVaccines(
+        activeAccount?.id ?? "",
+        activeUser?.id ?? ""
+      ).then((res) => {
+        setRecommendedList(res);
+      });
+    }
+  }, []);
+
+  const handleProfileToggle = async (profileId: string) => {
+    // setProfiles((prev) =>
+    //   prev.map((p) => ({
+    //     ...p,
+    //     selected: p.id === profileId,
+    //   }))
+    // );
+    setRecommendedList([]);
+    const newUser = activeAccount?.userList.find((p) => p.id == profileId);
+    if (newUser) {
+      await AsyncStorage.setItem("activeUser", newUser.id);
+      switchUser(newUser);
+      const rv = await getRecommendedVaccines(
+        activeAccount?.id ?? "",
+        newUser.id
+      );
+      setRecommendedList(rv);
+    }
     setShowProfileSheet(false);
   };
 
@@ -67,48 +95,85 @@ const Profile = () => {
     setShowLogoutConfirmation(true);
   };
 
-  const handleConfirmLogout = () => {
-    setActiveUser(null);
-    setActiveAccount(null);
-    router.replace('/(auth)/log_in'); 
+  const handleConfirmLogout = async () => {
+    switchUser(null);
+    switchAccount(null);
+    setRecommendedList([]);
+    await AsyncStorage.removeItem("accountId");
+    await AsyncStorage.removeItem("activeUser");
+    await AsyncStorage.removeItem("hasSeenOnboarding");
+    // setActiveUser(null);
+    // setActiveAccount(null);
+    router.replace("/(auth)/log_in");
   };
 
   const handleEditProfile = () => {
     setShowSettings(false);
-    router.push('/edit_profile');
+    router.push("/edit_profile");
   };
 
   const renderCompletedVac = () => (
     <View>
       {activeUser?.vaccinationHistory.map((hist) => (
-        <InfoCard
-          key={hist.id}  
-          iconSource={require("../../assets/icons/certif.png")}
-          title={hist.vaccine.vaccineName}
-          subtitle={
-            <View style={styles.subtitleRow}>
-              <Text style={styles.subtitleText}>Completed in</Text>
-              <Label text={dayjs(hist.vaccinationDate).format("DD MMMM YYYY")} variant="teal" />
-            </View>
-          }
-        />
+        <View key={hist.id}>
+          <InfoCard
+            onPress={() => setViewRecordVisible(true)}
+            key={hist.id}
+            iconSource={require("../../assets/icons/certif.png")}
+            title={hist.vaccine.vaccineName}
+            subtitle={
+              <View style={styles.subtitleRow}>
+                <Text style={styles.subtitleText}>Completed in</Text>
+                <Label
+                  text={dayjs(hist.vaccinationDate).format("DD MMMM YYYY")}
+                  variant="teal"
+                />
+              </View>
+            }
+            rightIconSource={require("../../assets/icons/chevron_down.png")}
+          />
+
+          <ViewRecordModal
+            open={viewRecordVisible}
+            setOpen={setViewRecordVisible}
+            record={hist}
+          />
+        </View>
       ))}
-      
     </View>
   );
 
-  const renderRecommendedVac = () =>(
+  const renderRecommendedVac = () => (
     <View>
-      <InfoCard
-        iconSource={require("../../assets/icons/injection_fill.png")}
-        title="HPV"
-        subtitle={
-          <View style={styles.subtitleRow}>
-            <Text style={styles.subtitleText}>Recommended in</Text>
-            <Label text="3 Days" variant="orange" />
-          </View>
-        }
-    />
+      {recommendedList.map((v) => (
+        <InfoCard
+          onPress={() => {
+            router.push({
+              pathname: "/vaccine_detail",
+              params: { vaccineId: v.vaccine.id },
+            });
+          }}
+          key={v.vaccine.id}
+          iconSource={require("../../assets/icons/injection_fill.png")}
+          title={v.vaccine.vaccineName}
+          subtitle={
+            <View style={styles.subtitleRow}>
+              <Text style={styles.subtitleText}>
+                {/* {v.message.split(' ')[0] + " Vaccination"} */}
+                Vaccination Progress
+              </Text>
+              <Label
+                text={`Dose ${v.nextDose.toString()} of ${v.message.substring(
+                  v.message.length - 2,
+                  v.message.length - 1
+                )}`}
+                variant="orange"
+              />
+            </View>
+          }
+          rightIconSource={require("../../assets/icons/chevron_down.png")}
+        />
+      ))}
     </View>
   );
 
@@ -117,18 +182,26 @@ const Profile = () => {
       <SafeAreaView style={styles.container}>
         <View style={styles.stickyHeader}>
           <Text style={styles.headerText}>Profile</Text>
-          <TouchableOpacity onPress={() => setShowSettings(true)}>
-            <Image
-              source={require("../../assets/icons/settings.png")}
-              style={styles.icon}
-            />
-          </TouchableOpacity>
+          <View style={styles.stickyHeaderSettings}>
+            <TouchableOpacity onPress={() => setAddRecordVisible(true)}>
+              <Image
+                source={require("../../assets/icons/user.png")}
+                style={styles.icon}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setShowSettings(true)}>
+              <Image
+                source={require("../../assets/icons/settings.png")}
+                style={styles.icon}
+              />
+            </TouchableOpacity>
+          </View>
         </View>
 
         <View style={styles.contentWrapper}>
           <View style={styles.rowItem}>
             <View style={styles.mb16}>
-              <ProfilePic name={activeUser?.fullName ?? ""} size={64} />
+              <ProfilePic name={activeUser?.fullName ?? ""} />
             </View>
 
             <View>
@@ -148,7 +221,9 @@ const Profile = () => {
               <View style={styles.statsRow}>
                 <View style={styles.rowItem}>
                   <Image source={icons.cake} style={styles.icon} />
-                  <Text>{dayjs(activeUser?.dateOfBirth).format("DD MMMM YYYY")}</Text>
+                  <Text>
+                    {dayjs(activeUser?.dateOfBirth).format("DD MMMM YYYY")}
+                  </Text>
                 </View>
 
                 <View style={styles.rowItem}>
@@ -193,10 +268,12 @@ const Profile = () => {
         <ProfileBottomSheet
           isVisible={showProfileSheet}
           onClose={() => setShowProfileSheet(false)}
-          profiles={profiles}
+          profiles={activeAccount?.userList ?? []}
           onProfileToggle={handleProfileToggle}
           onAddNewProfile={handleAddNewProfile}
         />
+
+        <AddRecordModal open={addRecordVisible} setOpen={setAddRecordVisible} />
       </SafeAreaView>
     </GestureHandlerRootView>
   );
@@ -216,6 +293,17 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
     backgroundColor: "#ffffff",
     zIndex: 10,
+  },
+  stickyHeaderSettings: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-around",
+    gap: 15,
+    // paddingHorizontal: 16,
+    // paddingTop: 16,
+    // paddingBottom: 10,
+    // backgroundColor: "#ffffff",
+    // zIndex: 10,
   },
   headerText: {
     fontSize: 18,

@@ -65,10 +65,12 @@ const styles = StyleSheet.create({
   leftSection: {
     flexDirection: "row",
     alignItems: "center",
+    // flexWrap: 'wrap'
   },
   icon: {
     width: 24,
     height: 24,
+    borderRadius: 10
   },
   textContainer: {
     marginLeft: 8,
@@ -83,6 +85,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#666",
     marginTop: 2,
+    flexWrap: 'wrap'
   },
 });
 

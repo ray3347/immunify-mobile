@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,23 +6,27 @@ import {
   TouchableOpacity,
   StyleSheet,
   Pressable,
-} from 'react-native';
-import { AntDesign, Feather } from '@expo/vector-icons';
-import AddProfileForm from './AddProfileForm';
+} from "react-native";
+import { AntDesign, Feather } from "@expo/vector-icons";
+import AddProfileForm from "./AddProfileForm";
+import { IUser } from "../interfaces/db/IUser";
+import { useActiveSession } from "../utilities/zustand";
+import dayjs from "dayjs";
+import { addUser } from "../utilities/api/user";
 
-interface Profile {
-  id: string;
-  name: string;
-  color: string;
-  selected: boolean;
-  gender?: string;
-  dateOfBirth?: string; 
-}
+// interface Profile {
+//   id: string;
+//   name: string;
+//   color: string;
+//   selected: boolean;
+//   gender?: string;
+//   dateOfBirth?: string;
+// }
 
 interface ProfileBottomSheetProps {
   isVisible: boolean;
   onClose: () => void;
-  profiles: Profile[];
+  profiles: IUser[];
   onProfileToggle: (profileId: string) => void;
   onAddNewProfile: () => void;
 }
@@ -34,15 +38,16 @@ const ProfileBottomSheet: React.FC<ProfileBottomSheetProps> = ({
   onProfileToggle,
   onAddNewProfile,
 }) => {
+  const { activeAccount, activeUser } = useActiveSession();
   const [showAddForm, setShowAddForm] = useState(false);
-  const [localProfiles, setLocalProfiles] = useState<Profile[]>([]);
+  const [localProfiles, setLocalProfiles] = useState<IUser[]>([]);
 
   useEffect(() => {
     setLocalProfiles(profiles);
   }, [profiles]);
 
   const getRandomColor = () => {
-    const colors = ['#F08A9B', '#5B9BD5', '#70AD47', '#FFC000', '#ED7D31'];
+    const colors = ["#F08A9B", "#5B9BD5", "#70AD47", "#FFC000", "#ED7D31"];
     return colors[Math.floor(Math.random() * colors.length)];
   };
 
@@ -50,19 +55,29 @@ const ProfileBottomSheet: React.FC<ProfileBottomSheetProps> = ({
     onProfileToggle(profileId);
   };
 
-  const handleAddProfile = (profile: { name: string; gender: string; dateOfBirth: string }) => {
-    const newProfile: Profile = {
-      id: Date.now().toString(),
-      name: profile.name,
-      color: getRandomColor(),
-      selected: false,
+  const handleAddProfile = (profile: {
+    name: string;
+    gender: string;
+    dateOfBirth: string;
+  }) => {
+    const newProfile: IUser = {
+      id: '',
+      fullName: profile.name,
+      // color: getRandomColor(),
+      // selected: false,
       gender: profile.gender,
-      dateOfBirth: profile.dateOfBirth,
+      dateOfBirth: new Date(profile.dateOfBirth),
+      scheduledAppointments: [],
+      vaccinationHistory: [],
     };
 
-    setLocalProfiles([...localProfiles, newProfile]);
-    setShowAddForm(false);
-    onAddNewProfile();
+    addUser(activeAccount?.id ?? "", newProfile).then((res) => {
+      console.log(res);
+
+      setLocalProfiles([...localProfiles, newProfile]);
+      setShowAddForm(false);
+      onAddNewProfile();
+    });
   };
 
   return (
@@ -80,7 +95,6 @@ const ProfileBottomSheet: React.FC<ProfileBottomSheetProps> = ({
             </View>
 
             <View style={styles.content}>
-
               {localProfiles.map((profile) => (
                 <TouchableOpacity
                   key={profile.id}
@@ -88,29 +102,39 @@ const ProfileBottomSheet: React.FC<ProfileBottomSheetProps> = ({
                   onPress={() => handleProfileToggle(profile.id)}
                 >
                   <View style={styles.profileInfo}>
-                    <View style={[styles.avatar, { backgroundColor: profile.color }]}>
+                    <View
+                      style={[styles.avatar, { backgroundColor: "#008B8B" }]}
+                    >
                       <Text style={styles.avatarText}>
-                        {profile.name.split(' ').map(n => n[0]).join('')}
+                        {profile.fullName
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")}
                       </Text>
                     </View>
-                    
+
                     <View>
-                      <Text style={styles.profileName}>{profile.name}</Text>
+                      <Text style={styles.profileName}>{profile.fullName}</Text>
                       <View style={styles.profileDetails}>
                         {profile.gender && profile.dateOfBirth && (
                           <Text style={styles.profileInfoText}>
-                            {profile.gender.charAt(0).toUpperCase() + profile.gender.slice(1)} • {profile.dateOfBirth}
+                            {profile.gender.charAt(0).toUpperCase() +
+                              profile.gender.slice(1)}{" "}
+                            •{" "}
+                            {dayjs(new Date(profile.dateOfBirth)).format("DD MMMM YYYY")}
                           </Text>
                         )}
                       </View>
                     </View>
                   </View>
 
-                  <View style={[
-                    styles.checkbox,
-                    profile.selected && styles.checkboxSelected
-                  ]}>
-                    {profile.selected && (
+                  <View
+                    style={[
+                      styles.checkbox,
+                      activeUser?.id == profile.id && styles.checkboxSelected,
+                    ]}
+                  >
+                    {activeUser?.id == profile.id && (
                       <AntDesign name="check" size={16} color="white" />
                     )}
                   </View>
@@ -121,14 +145,19 @@ const ProfileBottomSheet: React.FC<ProfileBottomSheetProps> = ({
                 style={styles.addButton}
                 onPress={() => setShowAddForm(true)}
               >
-                <Feather name="plus" size={20} color="#009999" style={styles.plusIcon} />
+                <Feather
+                  name="plus"
+                  size={20}
+                  color="#009999"
+                  style={styles.plusIcon}
+                />
                 <Text style={styles.addButtonText}>Add New Profile</Text>
               </TouchableOpacity>
             </View>
           </View>
         </Pressable>
       </Modal>
-      
+
       <AddProfileForm
         isVisible={showAddForm}
         onClose={() => setShowAddForm(false)}
@@ -141,120 +170,120 @@ const ProfileBottomSheet: React.FC<ProfileBottomSheetProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
   },
   sheet: {
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingBottom: 20,
   },
   handleContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingVertical: 12,
   },
   handle: {
     width: 40,
     height: 4,
-    backgroundColor: '#E0E0E0',
+    backgroundColor: "#E0E0E0",
     borderRadius: 2,
   },
   content: {
     paddingHorizontal: 16,
   },
   profileItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingVertical: 12,
     paddingHorizontal: 8,
     borderRadius: 8,
   },
   profileInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   avatar: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginRight: 12,
   },
   avatarText: {
-    color: 'white',
+    color: "white",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   profileName: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#1F2937',
+    fontWeight: "600",
+    color: "#1F2937",
   },
   checkbox: {
     width: 24,
     height: 24,
     borderRadius: 4,
     borderWidth: 2,
-    borderColor: '#D1D5DB',
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderColor: "#D1D5DB",
+    alignItems: "center",
+    justifyContent: "center",
   },
   checkboxSelected: {
-    backgroundColor: '#009999',
-    borderColor: '#009999',
+    backgroundColor: "#009999",
+    borderColor: "#009999",
   },
   addButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     marginTop: 24,
     paddingVertical: 16,
     borderWidth: 2,
-    borderColor: '#009999',
+    borderColor: "#009999",
     borderRadius: 12,
   },
   plusIcon: {
     marginRight: 8,
   },
   addButtonText: {
-    color: '#009999',
+    color: "#009999",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   profileDetails: {
-    flexDirection: 'column',
+    flexDirection: "column",
     gap: 4,
   },
   profileInfoText: {
     fontSize: 12,
-    color: '#6B7280',
+    color: "#6B7280",
   },
   emptyState: {
-    alignItems: 'center',
+    alignItems: "center",
     padding: 24,
     borderRadius: 8,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: "#F9FAFB",
     marginBottom: 16,
   },
   emptyStateText: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#1F2937',
+    fontWeight: "600",
+    color: "#1F2937",
     marginBottom: 4,
   },
   emptyStateSubtext: {
     fontSize: 14,
-    color: '#6B7280',
+    color: "#6B7280",
   },
   myProfileSection: {
     marginBottom: 8,
   },
   divider: {
     height: 1,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: "#E5E7EB",
     marginVertical: 8,
   },
 });
