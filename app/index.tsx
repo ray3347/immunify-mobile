@@ -18,6 +18,8 @@ import HttpService from "../constants/HttpService";
 import { useActiveSession, useUserLocation } from "../utilities/zustand";
 import { getUserById } from "../utilities/api/user";
 import * as Location from "expo-location";
+import * as Notifications from 'expo-notifications';
+import { registerForPushNotificationsAsync } from "../utilities/fcm-sub";
 
 const { width } = Dimensions.get("window");
 
@@ -49,27 +51,8 @@ export default function Onboarding() {
   const { latitude, longtitude, setUserLocation } = useUserLocation();
 
   useEffect(() => {
-    // const ha = fetchVax();
-    // HttpService.get("/wiki/vaccine").then((res)=> {
-    //   console.log("babi", res.data)
-
-    //   return res;
-    // })
-    // .catch((err)=>{
-    //   console.log("error", err)
-    // })
-    // ;
-    // console.log("babi", ha)
     Location.getForegroundPermissionsAsync().then(async (x) => {
-      // if (x.status == "granted") {
-      //   const pos = await Location.getCurrentPositionAsync();
-      //   console.log(pos);
-      //   setUserLocation(
-      //     pos.coords.latitude.toString(),
-      //     pos.coords.longitude.toString()
-      //   );
-      // }
-      console.log('adasdadsasdada', x)
+      // console.log('adasdadsasdada', x)
       const pos = await Location.getCurrentPositionAsync({});
         console.log(pos);
         setUserLocation(
@@ -77,6 +60,7 @@ export default function Onboarding() {
           pos.coords.longitude.toString()
         );
     });
+
     AsyncStorage.getItem("accountId").then(async (res) => {
       if (res) {
         const user = await getUserById(res);
@@ -89,27 +73,19 @@ export default function Onboarding() {
           }
         }
 
-        // navigator.geolocation.watchPosition((pos) => {
-        //   console.log("aaaa", pos);
-        //   setUserLocation(
-        //     pos.coords.latitude.toString(),
-        //     pos.coords.longitude.toString()
-        //   );
-        // });
-
-        // setCurrentIndex(onboardingData.length);
-        // await AsyncStorage.setItem("hasSeenOnboarding", "true");
-
-        // router.replace("/(tabs)/home");
-
         await AsyncStorage.setItem("hasSeenOnboarding", "true");
         router.replace("/(auth)/log_in");
       }
     });
-    // if(activeAccount){
-    //   router.replace('/(tabs)/home');
-    // }
   }, []);
+
+  useEffect(() => {
+   registerForPushNotificationsAsync().then(token => {
+      if (token){
+        console.log('fcm token', token);
+      }
+    });
+}, []);
 
   useEffect(() => {
     if (scrollViewRef.current) {

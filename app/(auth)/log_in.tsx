@@ -16,6 +16,7 @@ import { useActiveSession } from "../../utilities/zustand";
 import { IUserAccount } from "../../interfaces/db/IAccount";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { IUserLoginData } from "../../interfaces/requests/IUserLoginData";
 
 const Login = () => {
   const router = useRouter();
@@ -63,10 +64,14 @@ const Login = () => {
 
   const handleSubmit = () => {
     if (validate()) {
+      const notifToken = AsyncStorage.getItem("notificationToken").then((res)=>{
+        return res;
+      })
       const requestBody = {
         userData: {
           hashedUsername: form.email,
           hashedPassword: MD5(form.password).toString(),
+          notificationToken: notifToken ?? ''
         },
       };
       HttpService.post("/user/login", requestBody).then(async (res: IApiResult<IUserAccount>) => {

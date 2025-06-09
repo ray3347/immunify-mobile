@@ -102,10 +102,14 @@ const SignUp = () => {
   };
 
   const handleRegister = () => {
+    const notifToken = AsyncStorage.getItem("notificationToken").then((res)=>{
+      return res;
+    })
     const requestBody = {
       userData: {
         hashedUsername: form.email,
         hashedPassword: MD5(form.password).toString(),
+        notificationToken: notifToken ?? ""
       },
     };
     HttpService.post("/user/register", requestBody).then(

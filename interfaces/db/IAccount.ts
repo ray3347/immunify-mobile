@@ -11,6 +11,7 @@ export interface IAccount{
 
 export interface IUserAccount extends IAccount{
     userList: IUser[];
+    notificationToken: string[]
 }
 
 export interface IClinicAccount extends IAccount{
