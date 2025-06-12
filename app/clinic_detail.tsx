@@ -147,6 +147,7 @@ const ClinicDetail = () => {
           title="Set Appointment"
           onPress={goToBookAppointment}
           style={styles.button}
+          loading={false}
         />
       </View>
     </View>

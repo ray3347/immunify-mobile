@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, BackHandler } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  BackHandler,
+} from "react-native";
 import {
   GestureHandlerRootView,
   ScrollView,
@@ -22,22 +28,22 @@ const Login = () => {
   const router = useRouter();
   const navigation = useNavigation();
   const { activeAccount, switchAccount } = useActiveSession();
-
+  const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({ email: "", password: "" });
 
-   useEffect(() => {
-    // Disable Android back button
-    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => true);
+  //  useEffect(() => {
+  //   // Disable Android back button
+  //   const backHandler = BackHandler.addEventListener('hardwareBackPress', () => true);
 
-    return () => backHandler.remove();
-  }, []);
+  //   return () => backHandler.remove();
+  // }, []);
 
-  useEffect(()=>{
-    if(activeAccount){
-      router.push("/(tabs)/home");
+  useEffect(() => {
+    if (activeAccount) {
+      router.replace("/(tabs)/home");
     }
-  },[activeAccount]);
+  }, [activeAccount]);
 
   const handleChange = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -63,24 +69,31 @@ const Login = () => {
   };
 
   const handleSubmit = () => {
+    setLoading(true);
     if (validate()) {
-      const notifToken = AsyncStorage.getItem("notificationToken").then((res)=>{
-        return res;
-      })
+      const notifToken = AsyncStorage.getItem("notificationToken").then(
+        (res) => {
+          return res;
+        }
+      );
       const requestBody = {
         userData: {
           hashedUsername: form.email,
           hashedPassword: MD5(form.password).toString(),
-          notificationToken: notifToken ?? ''
+          notificationToken: notifToken ?? "",
         },
       };
-      HttpService.post("/user/login", requestBody).then(async (res: IApiResult<IUserAccount>) => {
-        const user = res.data.data;
-        await AsyncStorage.setItem('accountId', user.id);
-        switchAccount(user);
-        // console.log(activeAccount);
-      });
+      HttpService.post("/user/login", requestBody).then(
+        async (res: IApiResult<IUserAccount>) => {
+          const user = res.data.data;
+          await AsyncStorage.setItem("accountId", user.id);
+          switchAccount(user);
+          router.replace("/(tabs)/home");
+          // console.log(activeAccount);
+        }
+      );
     }
+    setLoading(false);
   };
 
   const goToSignUp = () => {
@@ -115,6 +128,7 @@ const Login = () => {
             title="Login"
             onPress={handleSubmit}
             style={styles.loginButton}
+            loading={loading}
           />
 
           <View style={styles.footer}>

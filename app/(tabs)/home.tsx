@@ -7,6 +7,7 @@ import {
   StyleSheet,
   ScrollView,
   BackHandler,
+  ActivityIndicator,
 } from "react-native";
 // import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -38,15 +39,15 @@ const Home = () => {
   const { latitude, longtitude } = useUserLocation();
   const { recommendedList, setRecommendedList } = useRecommendedVaccineList();
 
-  useEffect(() => {
-    // Disable Android back button
-    const backHandler = BackHandler.addEventListener(
-      "hardwareBackPress",
-      () => true
-    );
+  // useEffect(() => {
+  //   // Disable Android back button
+  //   const backHandler = BackHandler.addEventListener(
+  //     "hardwareBackPress",
+  //     () => true
+  //   );
 
-    return () => backHandler.remove();
-  }, []);
+  //   return () => backHandler.remove();
+  // }, []);
 
   useEffect(() => {
     if (vaccineList.length == 0) {
@@ -54,6 +55,15 @@ const Home = () => {
         if (res) {
           setVaccineList(res);
         }
+      });
+    }
+
+    if (recommendedList.length == 0) {
+      getRecommendedVaccines(
+        activeAccount?.id ?? "",
+        activeUser?.id ?? ""
+      ).then((res) => {
+        setRecommendedList(res);
       });
     }
   }, []);
@@ -140,41 +150,43 @@ const UpcomingVaccineSection = () => {
   const { recommendedList, setRecommendedList } = useRecommendedVaccineList();
   const router = useRouter();
   return (
-    <View style={styles.sectionSpacing}>
-      <Text style={styles.sectionTitle}>Recommended Vaccines</Text>
-      <Text style={styles.sectionSubtitle}>
-        We think you might need these vaccines
-      </Text>
-      {recommendedList.map((v) => (
-        <InfoCard
-          onPress={() => {
-            router.push({
-              pathname: "/vaccine_detail",
-              params: { vaccineId: v.vaccine.id },
-            });
-          }}
-          key={v.vaccine.id}
-          iconSource={require("../../assets/icons/injection_fill.png")}
-          title={v.vaccine.vaccineName}
-          subtitle={
-            <View style={styles.subtitleRow}>
-              <Text style={styles.subtitleText}>
-                {/* {v.message.split(' ')[0] + " Vaccination"} */}
-                Vaccination Progress
-              </Text>
-              <Label
-                text={`Dose ${v.nextDose.toString()} of ${v.message.substring(
-                  v.message.length - 2,
-                  v.message.length - 1
-                )}`}
-                variant="orange"
-              />
-            </View>
-          }
-          rightIconSource={require("../../assets/icons/chevron_down.png")}
-        />
-      ))}
-      {/* <InfoCard
+    <>
+      {recommendedList ? (
+        <View style={styles.sectionSpacing}>
+          <Text style={styles.sectionTitle}>Recommended Vaccines</Text>
+          <Text style={styles.sectionSubtitle}>
+            We think you might need these vaccines
+          </Text>
+          {recommendedList.map((v) => (
+            <InfoCard
+              onPress={() => {
+                router.push({
+                  pathname: "/vaccine_detail",
+                  params: { vaccineId: v.vaccine.id },
+                });
+              }}
+              key={v.vaccine.id}
+              iconSource={require("../../assets/icons/injection_fill.png")}
+              title={v.vaccine.vaccineName}
+              subtitle={
+                <View style={styles.subtitleRow}>
+                  <Text style={styles.subtitleText}>
+                    {/* {v.message.split(' ')[0] + " Vaccination"} */}
+                    Vaccination Progress
+                  </Text>
+                  <Label
+                    text={`Dose ${v.nextDose.toString()} of ${v.message.substring(
+                      v.message.length - 2,
+                      v.message.length - 1
+                    )}`}
+                    variant="orange"
+                  />
+                </View>
+              }
+              rightIconSource={require("../../assets/icons/chevron_down.png")}
+            />
+          ))}
+          {/* <InfoCard
       iconSource={require("../../assets/icons/injection_fill.png")}
       title="HPV"
       subtitle={
@@ -184,7 +196,11 @@ const UpcomingVaccineSection = () => {
         </View>
       }
     /> */}
-    </View>
+        </View>
+      ) : (
+        <ActivityIndicator size="large" color="#008B8B"/>
+      )}
+    </>
   );
 };
 

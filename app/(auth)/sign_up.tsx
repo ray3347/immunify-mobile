@@ -22,6 +22,7 @@ const SignUp = () => {
   const [testConfig, setTestConfig] = useState<any[]>([]);
   const [registerUser, setRegisterUser] = useState(false);
 
+  const [loading, setLoading] = useState(false);
   useEffect(() => {}, []);
 
   useEffect(() => {
@@ -102,6 +103,7 @@ const SignUp = () => {
   };
 
   const handleRegister = () => {
+    setLoading(true);
     const notifToken = AsyncStorage.getItem("notificationToken").then((res)=>{
       return res;
     })
@@ -135,6 +137,7 @@ const SignUp = () => {
         router.push("/(tabs)/home");
       }
     );
+    setLoading(false)
   };
 
   const goToLogin = () => {
@@ -187,6 +190,7 @@ const SignUp = () => {
                 title="Next"
                 onPress={handleSubmit}
                 style={{ marginTop: 20 }}
+                loading={false}
               />
 
               <View
@@ -330,6 +334,7 @@ const SignUp = () => {
                 title="Register"
                 onPress={handleRegister}
                 style={{ marginTop: 20 }}
+                loading={loading}
               />
             </ScrollView>
 

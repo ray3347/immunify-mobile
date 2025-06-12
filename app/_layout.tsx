@@ -1,11 +1,16 @@
 import { useEffect } from "react";
-import { TouchableOpacity } from "react-native";
+import {
+  Platform,
+  SafeAreaView,
+  StatusBar,
+  TouchableOpacity,
+} from "react-native";
 import { Stack, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import "react-native-reanimated";
-import React from 'react';
+import React from "react";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -34,7 +39,6 @@ const BackButton = ({ color = "#676767", marginLeft = 0 }) => {
         if (router.canGoBack()) {
           router.back();
         } else {
-          console.log('adadasd')
           router.replace("/"); // or router.push("/(tabs)") or any safe fallback
         }
       }}
@@ -44,7 +48,6 @@ const BackButton = ({ color = "#676767", marginLeft = 0 }) => {
     </TouchableOpacity>
   );
 };
-
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts(fontMap);
@@ -56,65 +59,67 @@ export default function RootLayout() {
   if (!fontsLoaded) return null;
 
   return (
-    <Stack>
-      <Stack.Screen name="index" options={{ headerShown: false }} />
-      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen
-        name="set_appointment"
-        options={{
-          headerShown: true,
-          title: "Booking Profiles",
-          headerLeft: () => <BackButton />,
-        }}
-      />
-      <Stack.Screen
-        name="book_clinic"
-        options={{
-          headerShown: true,
-          title: "Book Clinic",
-          headerLeft: () => <BackButton />,
-        }}
-      />
-      <Stack.Screen
-        name="article_detail"
-        options={{
-          headerShown: true,
-          title: "Article",
-          headerLeft: () => <BackButton />,
-        }}
-      />
-      <Stack.Screen
-        name="booking_summary"
-        options={{
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
-        name="detail_records"
-        options={{
-          headerShown: true,
-          title: "Detail Record",
-          headerLeft: () => <BackButton />,
-        }}
-      />
-      <Stack.Screen
-        name="vaccine_detail"
-        options={{
-          headerShown: true,
-          title: "Vaccine Detail",
-          headerLeft: () => <BackButton />,
-        }}
-      />
+    <SafeAreaView style={{ flex: 1 }}>
+      <Stack>
+        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="set_appointment"
+          options={{
+            headerShown: true,
+            title: "Booking Profiles",
+            headerLeft: () => <BackButton />,
+          }}
+        />
+        <Stack.Screen
+          name="book_clinic"
+          options={{
+            headerShown: true,
+            title: "Book Clinic",
+            headerLeft: () => <BackButton />,
+          }}
+        />
+        <Stack.Screen
+          name="article_detail"
+          options={{
+            headerShown: true,
+            title: "Article",
+            headerLeft: () => <BackButton />,
+          }}
+        />
+        <Stack.Screen
+          name="booking_summary"
+          options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="detail_records"
+          options={{
+            headerShown: true,
+            title: "Detail Record",
+            headerLeft: () => <BackButton />,
+          }}
+        />
+        <Stack.Screen
+          name="vaccine_detail"
+          options={{
+            headerShown: true,
+            title: "Vaccine Detail",
+            headerLeft: () => <BackButton />,
+          }}
+        />
 
-      <Stack.Screen
-        name="edit_profile"
-        options={{
-          headerShown: true,
-          title: "Edit Profile",
-          headerLeft: () => <BackButton />,
-        }}
-      />
-    </Stack>
+        <Stack.Screen
+          name="edit_profile"
+          options={{
+            headerShown: true,
+            title: "Edit Profile",
+            headerLeft: () => <BackButton />,
+          }}
+        />
+      </Stack>
+    </SafeAreaView>
   );
 }

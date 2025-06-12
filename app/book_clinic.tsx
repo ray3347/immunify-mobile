@@ -360,6 +360,7 @@ const BookClinic = () => {
           title="Continue"
           onPress={goToBookAppointment}
           style={styles.primaryBtn}
+          loading={false}
         />
       </View>
     </ScrollView>

@@ -523,6 +523,7 @@ const Tracker = () => {
                     onPress={() => setMonthPickerVisible(false)}
                     title="Apply"
                     style={styles.applyButton}
+                    loading={false}
                   />
                 </ScrollView>
               </View>
@@ -934,6 +935,7 @@ export function ViewRecordModal(props: IViewRecordModalProps) {
                     style={styles.primaryBtn}
                     onPress={() => downloadImage(props.record.certificateUri)}
                     title="Download Certificate"
+                    loading={false}
                   />
                 </>
               )}
