@@ -184,10 +184,11 @@ const Profile = () => {
           <Text style={styles.headerText}>Profile</Text>
           <View style={styles.stickyHeaderSettings}>
             <TouchableOpacity onPress={() => setAddRecordVisible(true)}>
-              <Image
+              {/* <Image
                 source={require("../../assets/icons/user.png")}
                 style={styles.icon}
-              />
+              /> */}
+              <Text style={{fontWeight: "bold", color: "#008B8B", fontSize: 14}}>Add Vaccination Record</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setShowSettings(true)}>
               <Image

@@ -171,7 +171,7 @@ const SetAppointment = () => {
                 : require("../assets/images/vaccine.png")
             }
             title={activeClinic?.name ?? ""}
-            subtitle={`${activeClinic?.address}`}
+            subtitle={`${activeClinic?.address.slice(0, 45)+"..."}`}
             titleColor="#4B5563"
           />
           <InfoCard

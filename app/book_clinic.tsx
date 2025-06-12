@@ -173,12 +173,14 @@ const BookClinic = () => {
           <Text style={styles.headingText}>{activeClinic?.name}</Text>
           <Text style={styles.bodyText}>{activeClinic?.address}</Text>
 
-          <View style={[styles.centeredRow, styles.mt8]}>
-            <Ionicons name="location-outline" size={16} color="#008B8B" />
-            <Text style={[styles.smallText, styles.accentText]}>
-              {activeClinic?.distanceFromUser} km
-            </Text>
-          </View>
+          {activeClinic?.distanceFromUser && (
+            <View style={[styles.centeredRow, styles.mt8]}>
+              <Ionicons name="location-outline" size={16} color="#008B8B" />
+              <Text style={[styles.smallText, styles.accentText]}>
+                {activeClinic?.distanceFromUser} km
+              </Text>
+            </View>
+          )}
 
           <View style={[styles.row, styles.mt16]}>
             <TouchableOpacity
@@ -221,7 +223,14 @@ const BookClinic = () => {
           <View style={styles.sectionContainer}>
             <Text style={styles.sectionTitle}>Available Time Slots</Text>
 
-            <View style={[styles.row, styles.mt12, styles.centeredRow]}>
+            <View
+              style={[
+                styles.row,
+                styles.mt12,
+                styles.centeredRow,
+                { justifyContent: "center", alignItems: "stretch" },
+              ]}
+            >
               {/* {dummyDays.map((day) => (
                 <TouchableOpacity
                   key={day}
@@ -245,6 +254,7 @@ const BookClinic = () => {
                 </TouchableOpacity>
               ))} */}
               <Calendar
+                style={styles.calendar}
                 minDate={tomorrow}
                 markedDates={getMarkedDates()}
                 current={currentCalendarDate}
@@ -456,6 +466,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
   },
   centeredRow: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
   },
@@ -571,6 +582,10 @@ const styles = StyleSheet.create({
     marginTop: 36,
     bottom: 36,
     fontWeight: "500",
+  },
+  calendar: {
+    flex: 1,
+    alignSelf: "stretch",
   },
 });
 

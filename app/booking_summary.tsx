@@ -1,10 +1,18 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
+  Linking,
+} from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useActiveSession } from "../utilities/zustand";
 import { IUserAppointment } from "../interfaces/db/IAppointment";
 import dayjs from "dayjs";
 import { IUser } from "../interfaces/db/IUser";
+import { Ionicons } from "@expo/vector-icons";
 
 const BookingSummary = () => {
   const router = useRouter();
@@ -34,7 +42,13 @@ const BookingSummary = () => {
   }, []);
 
   const handleBackToHome = () => {
-    typeof isResultScreen == "string" && isResultScreen == "true" ? router.replace("/(tabs)/home") : router.replace("/(tabs)/tracker");
+    typeof isResultScreen == "string" && isResultScreen == "true"
+      ? router.replace("/(tabs)/home")
+      : router.replace("/(tabs)/tracker");
+  };
+
+  const handleOpenMaps = () => {
+    Linking.openURL(activeAppointment?.clinic.googleMapsURL ?? "");
   };
 
   // const summary = {
@@ -52,7 +66,11 @@ const BookingSummary = () => {
     <View style={styles.container}>
       <View style={styles.card}>
         <Image
-          source={typeof isResultScreen == "string" && isResultScreen == "true" ? require("../assets/icons/clock.png") : require("../assets/icons/hospital.png")}
+          source={
+            typeof isResultScreen == "string" && isResultScreen == "true"
+              ? require("../assets/icons/clock.png")
+              : require("../assets/icons/hospital.png")
+          }
           style={styles.icon}
         />
         <Text style={styles.title}>Booking Details</Text>
@@ -111,8 +129,36 @@ const BookingSummary = () => {
           <></>
         )}
       </View>
+      {typeof isResultScreen == "string" && isResultScreen == "false" && (
+        <TouchableOpacity
+          style={{
+            ...styles.primaryBtn,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            marginBottom: 10,
+            backgroundColor: "white",
+            borderWidth: 1,
+            borderColor: "#008B8B"
+          }}
+          onPress={handleOpenMaps}
+        >
+          <Ionicons name="navigate-outline" size={18} color="#008B8B" />
+          <Text style={{
+            ...styles.primaryBtnText,
+            color: "#008B8B"
+          }}> Open in Google Maps</Text>
+        </TouchableOpacity>
+
+      )}
+      
       <TouchableOpacity style={styles.primaryBtn} onPress={handleBackToHome}>
-        <Text style={styles.primaryBtnText}> {typeof isResultScreen == "string" && isResultScreen == "true" ? 'Back to Home' : 'Back'}</Text>
+        <Text style={styles.primaryBtnText}>
+          {" "}
+          {typeof isResultScreen == "string" && isResultScreen == "true"
+            ? "Back to Home"
+            : "Back"}
+        </Text>
       </TouchableOpacity>
     </View>
   );
