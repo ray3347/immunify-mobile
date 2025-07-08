@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "390658548521",
+    "project_id": "immunify-thesis-dev",
+    "storage_bucket": "immunify-thesis-dev.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:390658548521:android:c5f01b1be8c07513c98d38",
+        "android_client_info": {
+          "package_name": "com.anonymous.immunify"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCuUq4GMBKtTveXMsgp2I6E_lOjk2kETZ8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

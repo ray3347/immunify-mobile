@@ -1,39 +1,125 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
+import { useEffect } from "react";
+import {
+  Platform,
+  SafeAreaView,
+  StatusBar,
+  TouchableOpacity,
+} from "react-native";
+import { Stack, useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { useFonts } from "expo-font";
+import * as SplashScreen from "expo-splash-screen";
+import "react-native-reanimated";
+import React from "react";
 
-import { useColorScheme } from '@/hooks/useColorScheme';
-
-// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
+const fontMap = {
+  "PlusJakartaSans-Regular": require("../assets/fonts/PlusJakartaSans-Regular.ttf"),
+  "PlusJakartaSans-ExtraBold": require("../assets/fonts/PlusJakartaSans-ExtraBold.ttf"),
+  "PlusJakartaSans-Bold": require("../assets/fonts/PlusJakartaSans-Bold.ttf"),
+  "PlusJakartaSans-ExtraBoldItalic": require("../assets/fonts/PlusJakartaSans-ExtraBoldItalic.ttf"),
+  "PlusJakartaSans-ExtraLight": require("../assets/fonts/PlusJakartaSans-ExtraLight.ttf"),
+  "PlusJakartaSans-ExtraLightItalic": require("../assets/fonts/PlusJakartaSans-ExtraLightItalic.ttf"),
+  "PlusJakartaSans-Light": require("../assets/fonts/PlusJakartaSans-Light.ttf"),
+  "PlusJakartaSans-LightItalic": require("../assets/fonts/PlusJakartaSans-LightItalic.ttf"),
+  "PlusJakartaSans-Italic": require("../assets/fonts/PlusJakartaSans-Italic.ttf"),
+  "PlusJakartaSans-Medium": require("../assets/fonts/PlusJakartaSans-Medium.ttf"),
+  "PlusJakartaSans-MediumItalic": require("../assets/fonts/PlusJakartaSans-MediumItalic.ttf"),
+  "PlusJakartaSans-SemiBold": require("../assets/fonts/PlusJakartaSans-SemiBold.ttf"),
+  "PlusJakartaSans-SemiBoldItalic": require("../assets/fonts/PlusJakartaSans-SemiBoldItalic.ttf"),
+};
 
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
-
-  if (!loaded) {
-    return null;
-  }
+const BackButton = ({ color = "#676767", marginLeft = 0 }) => {
+  const router = useRouter();
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+    <TouchableOpacity
+      onPress={() => {
+        if (router.canGoBack()) {
+          router.back();
+        } else {
+          router.replace("/"); // or router.push("/(tabs)") or any safe fallback
+        }
+      }}
+      style={{ marginRight: 12 }}
+    >
+      <Ionicons name="arrow-back" size={24} color={color} />
+    </TouchableOpacity>
+  );
+};
+
+export default function RootLayout() {
+  const [fontsLoaded] = useFonts(fontMap);
+
+  useEffect(() => {
+    if (fontsLoaded) SplashScreen.hideAsync();
+  }, [fontsLoaded]);
+
+  if (!fontsLoaded) return null;
+
+  return (
+    <SafeAreaView style={{ flex: 1 }}>
       <Stack>
+        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
+        <Stack.Screen
+          name="set_appointment"
+          options={{
+            headerShown: true,
+            title: "Booking Profiles",
+            headerLeft: () => <BackButton />,
+          }}
+        />
+        <Stack.Screen
+          name="book_clinic"
+          options={{
+            headerShown: true,
+            title: "Book Clinic",
+            headerLeft: () => <BackButton />,
+          }}
+        />
+        <Stack.Screen
+          name="article_detail"
+          options={{
+            headerShown: true,
+            title: "Article",
+            headerLeft: () => <BackButton />,
+          }}
+        />
+        <Stack.Screen
+          name="booking_summary"
+          options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="detail_records"
+          options={{
+            headerShown: true,
+            title: "Detail Record",
+            headerLeft: () => <BackButton />,
+          }}
+        />
+        <Stack.Screen
+          name="vaccine_detail"
+          options={{
+            headerShown: true,
+            title: "Vaccine Detail",
+            headerLeft: () => <BackButton />,
+          }}
+        />
+
+        <Stack.Screen
+          name="edit_profile"
+          options={{
+            headerShown: true,
+            title: "Edit Profile",
+            headerLeft: () => <BackButton />,
+          }}
+        />
       </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    </SafeAreaView>
   );
 }
