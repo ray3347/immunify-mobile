@@ -198,7 +198,16 @@ const UpcomingVaccineSection = () => {
     /> */}
         </View>
       ) : (
-        <ActivityIndicator size="large" color="#008B8B"/>
+        <View
+          style={{
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 20,
+          }}
+        >
+          <ActivityIndicator size="large" color="#008B8B" />
+        </View>
       )}
     </>
   );

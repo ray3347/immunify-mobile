@@ -57,7 +57,7 @@ export default function Onboarding() {
   const pageLoad = async () => {
     setLoading(true);
     setShowOnboarding(true);
-    console.log('load start');
+    console.log("load start");
     registerForPushNotificationsAsync().then((token) => {
       if (token) {
         console.log("fcm token", token);
@@ -90,7 +90,7 @@ export default function Onboarding() {
         router.replace("/(auth)/log_in");
       }
     });
-    console.log('load end');
+    console.log("load end");
     setLoading(false);
   };
 
@@ -121,61 +121,79 @@ export default function Onboarding() {
       <SafeAreaView style={styles.safeArea}>
         <StatusBar style="dark" />
         {loading ? (
-          <ActivityIndicator size="large" color="#008B8B" />
-        ) : showOnboarding && (
-          <View style={styles.mainContainer}>
-            <View style={styles.scrollViewContainer}>
-              <ScrollView
-                ref={scrollViewRef}
-                horizontal
-                pagingEnabled
-                showsHorizontalScrollIndicator={false}
-                scrollEnabled={false}
-                contentContainerStyle={styles.scrollContent}
-              >
-                {currentIndex < onboardingData.length && (
-                  <>
-                    {onboardingData.map((item, index) => (
-                      <View key={index} style={styles.slideItem}>
-                        <Image source={item.image} style={styles.slideImage} />
-                        <Text style={styles.slideTitle}>{item.title}</Text>
-                        <Text style={styles.slideDescription}>
-                          {item.description}
-                        </Text>
-                      </View>
-                    ))}
-                  </>
-                )}
-              </ScrollView>
-            </View>
-
-            {/* Container for bottom controls with padding */}
-            <View style={styles.controlsContainer}>
-              <View style={styles.paginationContainer}>
-                {currentIndex < onboardingData.length && (
-                  <>
-                    {onboardingData.map((_, index) => (
-                      <View
-                        key={index}
-                        style={[
-                          styles.paginationDot,
-                          currentIndex === index && styles.paginationDotActive,
-                        ]}
-                      />
-                    ))}
-                  </>
-                )}
+          <View
+            style={{
+              flex: 1,
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 20,
+            }}
+          >
+            <ActivityIndicator size="large" color="#008B8B" />
+          </View>
+        ) : (
+          showOnboarding && (
+            <View style={styles.mainContainer}>
+              <View style={styles.scrollViewContainer}>
+                <ScrollView
+                  ref={scrollViewRef}
+                  horizontal
+                  pagingEnabled
+                  showsHorizontalScrollIndicator={false}
+                  scrollEnabled={false}
+                  contentContainerStyle={styles.scrollContent}
+                >
+                  {currentIndex < onboardingData.length && (
+                    <>
+                      {onboardingData.map((item, index) => (
+                        <View key={index} style={styles.slideItem}>
+                          <Image
+                            source={item.image}
+                            style={styles.slideImage}
+                          />
+                          <Text style={styles.slideTitle}>{item.title}</Text>
+                          <Text style={styles.slideDescription}>
+                            {item.description}
+                          </Text>
+                        </View>
+                      ))}
+                    </>
+                  )}
+                </ScrollView>
               </View>
 
-              <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
-                <Text style={styles.nextButtonText}>
-                  {currentIndex === onboardingData.length - 1
-                    ? "Get Started"
-                    : "Next"}
-                </Text>
-              </TouchableOpacity>
+              {/* Container for bottom controls with padding */}
+              <View style={styles.controlsContainer}>
+                <View style={styles.paginationContainer}>
+                  {currentIndex < onboardingData.length && (
+                    <>
+                      {onboardingData.map((_, index) => (
+                        <View
+                          key={index}
+                          style={[
+                            styles.paginationDot,
+                            currentIndex === index &&
+                              styles.paginationDotActive,
+                          ]}
+                        />
+                      ))}
+                    </>
+                  )}
+                </View>
+
+                <TouchableOpacity
+                  style={styles.nextButton}
+                  onPress={handleNext}
+                >
+                  <Text style={styles.nextButtonText}>
+                    {currentIndex === onboardingData.length - 1
+                      ? "Get Started"
+                      : "Next"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
+          )
         )}
       </SafeAreaView>
     </GestureHandlerRootView>

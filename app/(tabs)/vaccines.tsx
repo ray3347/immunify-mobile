@@ -134,10 +134,20 @@ const Vaccines = () => {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaView style={styles.container}>
         {loading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#008B8B" />
-            <Text style={styles.loadingText}>Loading vaccines...</Text>
-          </View>
+          <View
+              style={{
+                flex: 1,
+                alignItems: "center",
+                justifyContent: "center",
+                zIndex: 20,
+              }}
+            >
+              <ActivityIndicator size="large" color="#008B8B" />
+            </View>
+          // <View style={styles.loadingContainer}>
+            
+          //   <Text style={styles.loadingText}>Loading vaccines...</Text>
+          // </View>
         ) : (
           <FlatList
             data={filteredVaccines}

@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   Dimensions,
+  ActivityIndicator,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import { Feather } from "@expo/vector-icons";
@@ -19,6 +20,8 @@ import InfoCard from "../components/InfoCard";
 import dayjs from "dayjs";
 import { bookAppointment } from "../utilities/api/appointment";
 import { IBookAppointmentRequestDTO } from "../interfaces/requests/IBookAppointmentRequestDTO";
+import { addUser } from "../utilities/api/user";
+import { IUser } from "../interfaces/db/IUser";
 
 // interface Profile {
 //   id: string;
@@ -43,6 +46,7 @@ const SetAppointment = () => {
 
   const [activeVaccine, setActiveVaccine] = useState<IVaccine>();
   const [activeClinic, setActiveClinic] = useState<IClinic>();
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const vaccine = vaccineList.find((v) => v.id == vaccineId);
@@ -75,7 +79,8 @@ const SetAppointment = () => {
 
   const handleAddProfile = (profile: {
     name: string;
-    dateOfBirth?: string;
+    gender: string;
+    dateOfBirth: string;
   }) => {
     // const newProfile: Profile = {
     //   id: Date.now().toString(),
@@ -86,7 +91,26 @@ const SetAppointment = () => {
     //   selected: false,
     // };
     // setProfiles([...profiles, newProfile]);
-    setModalVisible(false);
+    setLoading(true);
+    const newProfile: IUser = {
+      id: "",
+      fullName: profile.name,
+      // color: getRandomColor(),
+      // selected: false,
+      gender: profile.gender,
+      dateOfBirth: new Date(profile.dateOfBirth),
+      scheduledAppointments: [],
+      vaccinationHistory: [],
+    };
+
+    addUser(activeAccount?.id ?? "", newProfile).then((res) => {
+      console.log(res);
+
+      switchAccount(res);
+      switchUser(activeUser);
+      setModalVisible(false);
+    });
+    setLoading(false);
   };
 
   // const getSelectedCount = () => {
@@ -111,80 +135,97 @@ const SetAppointment = () => {
 
         router.replace({
           pathname: "/booking_summary",
-          params: {appointmentId: res.appointmentId, appointedUserId: activeUser?.id, isResultScreen: 'true'}
+          params: {
+            appointmentId: res.appointmentId,
+            appointedUserId: activeUser?.id,
+            isResultScreen: "true",
+          },
         });
       });
     }
   };
 
   return (
-    <View style={styles.mainContainer}>
-      <ScrollView style={styles.container}>
-        {/* Profile Selection Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Select Profiles to Book</Text>
-
-          {activeAccount?.userList.map((profile) => (
-            <TouchableOpacity
-              key={profile.id}
-              style={[
-                styles.profileCard,
-                profile.id == selectedUser?.id && styles.profileSelected,
-              ]}
-              onPress={() => toggleProfileSelection(profile.id)}
-            >
-              <View style={styles.profileInfo}>
-                <Text style={styles.profileName}>{profile.fullName}</Text>
-                {/* <Text style={styles.profileDetails}>Age: {profile.age}</Text> */}
-              </View>
-              <View style={styles.checkboxContainer}>
-                <View
-                  style={
-                    profile.id == selectedUser?.id
-                      ? styles.checkboxSelected
-                      : styles.checkbox
-                  }
-                >
-                  {profile.id == selectedUser?.id && (
-                    <Feather name="check" size={16} color="white" />
-                  )}
-                </View>
-              </View>
-            </TouchableOpacity>
-          ))}
-
-          {/* Add Another Profile Button */}
-          <TouchableOpacity
-            style={styles.addProfileButton}
-            onPress={openAddProfileModal}
-          >
-            <Feather name="plus" size={16} color="#009688" />
-            <Text style={styles.addProfileText}>Add Another Profile</Text>
-          </TouchableOpacity>
+    <>
+      {loading ? (
+        <View
+          style={{
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 20,
+          }}
+        >
+          <ActivityIndicator size="large" color="#008B8B" />
         </View>
-        <View>
-          <Text style={styles.sectionTitle}>Appointment Details</Text>
-          <InfoCard
-            iconSource={
-              activeClinic?.image
-                ? { uri: activeClinic.image }
-                : require("../assets/images/vaccine.png")
-            }
-            title={activeClinic?.name ?? ""}
-            subtitle={`${activeClinic?.address.slice(0, 45)+"..."}`}
-            titleColor="#4B5563"
-          />
-          <InfoCard
-            iconSource={
-              activeVaccine?.image
-                ? { uri: activeVaccine.image }
-                : require("../assets/images/vaccine.png")
-            }
-            title={activeVaccine?.vaccineName ?? ""}
-            subtitle={`${activeVaccine?.price} - Pay during your visit`}
-            titleColor="#4B5563"
-          />
-          {/* <VaccineCard
+      ) : (
+        <View style={styles.mainContainer}>
+          <ScrollView style={styles.container}>
+            {/* Profile Selection Section */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Select Profiles to Book</Text>
+
+              {activeAccount?.userList.map((profile) => (
+                <TouchableOpacity
+                  key={profile.id}
+                  style={[
+                    styles.profileCard,
+                    profile.id == selectedUser?.id && styles.profileSelected,
+                  ]}
+                  onPress={() => toggleProfileSelection(profile.id)}
+                >
+                  <View style={styles.profileInfo}>
+                    <Text style={styles.profileName}>{profile.fullName}</Text>
+                    {/* <Text style={styles.profileDetails}>Age: {profile.age}</Text> */}
+                  </View>
+                  <View style={styles.checkboxContainer}>
+                    <View
+                      style={
+                        profile.id == selectedUser?.id
+                          ? styles.checkboxSelected
+                          : styles.checkbox
+                      }
+                    >
+                      {profile.id == selectedUser?.id && (
+                        <Feather name="check" size={16} color="white" />
+                      )}
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              ))}
+
+              {/* Add Another Profile Button */}
+              <TouchableOpacity
+                style={styles.addProfileButton}
+                onPress={openAddProfileModal}
+              >
+                <Feather name="plus" size={16} color="#009688" />
+                <Text style={styles.addProfileText}>Add Another Profile</Text>
+              </TouchableOpacity>
+            </View>
+            <View>
+              <Text style={styles.sectionTitle}>Appointment Details</Text>
+              <InfoCard
+                iconSource={
+                  activeClinic?.image
+                    ? { uri: activeClinic.image }
+                    : require("../assets/images/vaccine.png")
+                }
+                title={activeClinic?.name ?? ""}
+                subtitle={`${activeClinic?.address.slice(0, 45) + "..."}`}
+                titleColor="#4B5563"
+              />
+              <InfoCard
+                iconSource={
+                  activeVaccine?.image
+                    ? { uri: activeVaccine.image }
+                    : require("../assets/images/vaccine.png")
+                }
+                title={activeVaccine?.vaccineName ?? ""}
+                subtitle={`${activeVaccine?.price} - Pay during your visit`}
+                titleColor="#4B5563"
+              />
+              {/* <VaccineCard
             title={activeVaccine?.vaccineName ?? ""}
             image={
               activeVaccine?.image
@@ -195,33 +236,38 @@ const SetAppointment = () => {
             distance={"Available"}
             price={activeVaccine?.price ?? ""}
           /> */}
+            </View>
+            <View style={{ height: 170 }} />
+          </ScrollView>
+
+          <View style={styles.footer}>
+            <Text style={styles.bookingInfo}>
+              Booking for {selectedUser?.fullName} on{" "}
+              {dayjs(
+                typeof date === "string" ? new Date(date) : new Date()
+              ).format("dddd, DD MMMM YYYY")}{" "}
+              at {typeof time === "string" ? time : ""}
+            </Text>
+            <TouchableOpacity
+              style={[
+                styles.primaryBtn,
+                !selectedUser && styles.disabledButton,
+              ]}
+              disabled={!selectedUser}
+              onPress={handleConfirmBooking} // Tambahkan ini
+            >
+              <Text style={styles.confirmButtonText}>Confirm Booking</Text>
+            </TouchableOpacity>
+          </View>
+
+          <AddProfileForm
+            isVisible={modalVisible}
+            onClose={closeAddProfileModal}
+            onSave={handleAddProfile}
+          />
         </View>
-        <View style={{ height: 130 }} />
-      </ScrollView>
-
-      <View style={styles.footer}>
-        <Text style={styles.bookingInfo}>
-          Booking for {selectedUser?.fullName} on{" "}
-          {dayjs(typeof date === "string" ? new Date(date) : new Date()).format(
-            "dddd, DD MMMM YYYY"
-          )}{" "}
-          at {typeof time === "string" ? time : ""}
-        </Text>
-        <TouchableOpacity
-          style={[styles.primaryBtn, !selectedUser && styles.disabledButton]}
-          disabled={!selectedUser}
-          onPress={handleConfirmBooking} // Tambahkan ini
-        >
-          <Text style={styles.confirmButtonText}>Confirm Booking</Text>
-        </TouchableOpacity>
-      </View>
-
-      <AddProfileForm
-        isVisible={modalVisible}
-        onClose={closeAddProfileModal}
-        onSave={handleAddProfile}
-      />
-    </View>
+      )}
+    </>
   );
 };
 

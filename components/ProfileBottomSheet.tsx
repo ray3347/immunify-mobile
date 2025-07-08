@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Pressable,
+  ActivityIndicator,
 } from "react-native";
 import { AntDesign, Feather } from "@expo/vector-icons";
 import AddProfileForm from "./AddProfileForm";
@@ -38,9 +39,11 @@ const ProfileBottomSheet: React.FC<ProfileBottomSheetProps> = ({
   onProfileToggle,
   onAddNewProfile,
 }) => {
-  const { activeAccount, activeUser } = useActiveSession();
+  const { activeAccount, activeUser, switchAccount, switchUser } =
+    useActiveSession();
   const [showAddForm, setShowAddForm] = useState(false);
   const [localProfiles, setLocalProfiles] = useState<IUser[]>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     setLocalProfiles(profiles);
@@ -60,8 +63,9 @@ const ProfileBottomSheet: React.FC<ProfileBottomSheetProps> = ({
     gender: string;
     dateOfBirth: string;
   }) => {
+    setLoading(true);
     const newProfile: IUser = {
-      id: '',
+      id: "",
       fullName: profile.name,
       // color: getRandomColor(),
       // selected: false,
@@ -74,8 +78,12 @@ const ProfileBottomSheet: React.FC<ProfileBottomSheetProps> = ({
     addUser(activeAccount?.id ?? "", newProfile).then((res) => {
       console.log(res);
 
+      switchAccount(res);
+      switchUser(activeUser);
       setLocalProfiles([...localProfiles, newProfile]);
+      setLoading(false);
       setShowAddForm(false);
+      isVisible = true;
       onAddNewProfile();
     });
   };
@@ -89,72 +97,89 @@ const ProfileBottomSheet: React.FC<ProfileBottomSheetProps> = ({
         onRequestClose={onClose}
       >
         <Pressable style={styles.overlay} onPress={onClose}>
-          <View style={styles.sheet}>
-            <View style={styles.handleContainer}>
-              <View style={styles.handle} />
+          {loading ? (
+            <View
+              style={{
+                flex: 1,
+                alignItems: "center",
+                justifyContent: "center",
+                zIndex: 20,
+              }}
+            >
+              <ActivityIndicator size="large" color="#008B8B" />
             </View>
+          ) : (
+            <View style={styles.sheet}>
+              <View style={styles.handleContainer}>
+                <View style={styles.handle} />
+              </View>
 
-            <View style={styles.content}>
-              {localProfiles.map((profile) => (
-                <TouchableOpacity
-                  key={profile.id}
-                  style={styles.profileItem}
-                  onPress={() => handleProfileToggle(profile.id)}
-                >
-                  <View style={styles.profileInfo}>
-                    <View
-                      style={[styles.avatar, { backgroundColor: "#008B8B" }]}
-                    >
-                      <Text style={styles.avatarText}>
-                        {profile.fullName
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")}
-                      </Text>
-                    </View>
+              <View style={styles.content}>
+                {localProfiles.map((profile) => (
+                  <TouchableOpacity
+                    key={profile.id}
+                    style={styles.profileItem}
+                    onPress={() => handleProfileToggle(profile.id)}
+                  >
+                    <View style={styles.profileInfo}>
+                      <View
+                        style={[styles.avatar, { backgroundColor: "#008B8B" }]}
+                      >
+                        <Text style={styles.avatarText}>
+                          {profile.fullName
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")}
+                        </Text>
+                      </View>
 
-                    <View>
-                      <Text style={styles.profileName}>{profile.fullName}</Text>
-                      <View style={styles.profileDetails}>
-                        {profile.gender && profile.dateOfBirth && (
-                          <Text style={styles.profileInfoText}>
-                            {profile.gender.charAt(0).toUpperCase() +
-                              profile.gender.slice(1)}{" "}
-                            •{" "}
-                            {dayjs(new Date(profile.dateOfBirth)).format("DD MMMM YYYY")}
-                          </Text>
-                        )}
+                      <View>
+                        <Text style={styles.profileName}>
+                          {profile.fullName}
+                        </Text>
+                        <View style={styles.profileDetails}>
+                          {profile.gender && profile.dateOfBirth && (
+                            <Text style={styles.profileInfoText}>
+                              {profile.gender.charAt(0).toUpperCase() +
+                                profile.gender.slice(1)}{" "}
+                              •{" "}
+                              {dayjs(new Date(profile.dateOfBirth)).format(
+                                "DD MMMM YYYY"
+                              )}
+                            </Text>
+                          )}
+                        </View>
                       </View>
                     </View>
-                  </View>
 
-                  <View
-                    style={[
-                      styles.checkbox,
-                      activeUser?.id == profile.id && styles.checkboxSelected,
-                    ]}
-                  >
-                    {activeUser?.id == profile.id && (
-                      <AntDesign name="check" size={16} color="white" />
-                    )}
-                  </View>
+                    <View
+                      style={[
+                        styles.checkbox,
+                        activeUser?.id == profile.id && styles.checkboxSelected,
+                      ]}
+                    >
+                      {activeUser?.id == profile.id && (
+                        <AntDesign name="check" size={16} color="white" />
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                ))}
+
+                <TouchableOpacity
+                  style={styles.addButton}
+                  onPress={() => setShowAddForm(true)}
+                >
+                  <Feather
+                    name="plus"
+                    size={20}
+                    color="#009999"
+                    style={styles.plusIcon}
+                  />
+                  <Text style={styles.addButtonText}>Add New Profile</Text>
                 </TouchableOpacity>
-              ))}
-
-              <TouchableOpacity
-                style={styles.addButton}
-                onPress={() => setShowAddForm(true)}
-              >
-                <Feather
-                  name="plus"
-                  size={20}
-                  color="#009999"
-                  style={styles.plusIcon}
-                />
-                <Text style={styles.addButtonText}>Add New Profile</Text>
-              </TouchableOpacity>
+              </View>
             </View>
-          </View>
+          )}
         </Pressable>
       </Modal>
 

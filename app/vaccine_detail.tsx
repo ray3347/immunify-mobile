@@ -48,7 +48,16 @@ const VaccineDetail = () => {
     <ScrollView style={styles.scrollContainer}>
       {loading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#008B8B" />
+          <View
+            style={{
+              flex: 1,
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 20,
+            }}
+          >
+            <ActivityIndicator size="large" color="#008B8B" />
+          </View>
           <Text style={styles.loadingText}>Loading vaccines...</Text>
         </View>
       ) : (
